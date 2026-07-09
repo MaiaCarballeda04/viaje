@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valhalla Engine - WebGL 3D Prototype</title>
+    <title>Saga of the Skogkatt: WebGL 360 Chronicles</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-dark: #05070c;
+            --bg-dark: #020408;
             --gold: #d4af37;
             --font-title: 'Cinzel', serif;
+            --font-medieval: 'Almendra', serif;
             --font-body: 'Cormorant Garamond', serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body, html { width: 100%; height: 100%; background-color: var(--bg-dark); overflow: hidden; font-family: var(--font-body); color: #e2e8f0; }
 
-        /* Lienzo donde se renderiza el juego en 3D real */
         #canvas-3d {
             position: absolute;
             top: 0;
@@ -27,156 +27,239 @@
             width: 100%;
             height: 100%;
             z-index: 1;
+            cursor: grab;
         }
+        #canvas-3d:active { cursor: grabbing; }
 
-        /* --- INTERFAZ HUD PROFESIONAL (ESTILO RPG INTERACTIVO) --- */
+        /* --- INTERFAZ HUD LITERARIA MEJORADA --- */
         .hud-container {
             position: absolute;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
-            max-width: 650px;
-            background: rgba(10, 14, 22, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            border-radius: 6px;
+            max-width: 680px;
+            background: rgba(7, 10, 15, 0.9);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
             padding: 1.5rem;
             z-index: 10;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+            transition: all 0.5s ease;
         }
 
         .hud-title {
             font-family: var(--font-title);
             color: var(--gold);
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             letter-spacing: 2px;
             text-align: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.6rem;
         }
 
         .hud-text {
-            font-size: 1.15rem;
+            font-size: 1.2rem;
             text-align: justify;
             color: #cbd5e1;
-            line-height: 1.5;
+            line-height: 1.6;
+            margin-bottom: 0.8rem;
         }
 
-        /* Consola de estado del motor en la esquina */
-        .debug-panel {
+        .hud-lore {
+            font-family: var(--font-medieval);
+            font-style: italic;
+            color: #a0aec0;
+            font-size: 1.05rem;
+            border-top: 1px solid rgba(212, 175, 55, 0.15);
+            padding-top: 0.6rem;
+            text-align: center;
+        }
+
+        .hud-lore span {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .controls-hint {
             position: absolute;
             top: 20px;
-            left: 20px;
-            background: rgba(13, 17, 23, 0.7);
-            border-left: 3px solid #478cbf;
-            padding: 12px 16px;
-            font-family: monospace;
+            right: 20px;
+            background: rgba(10, 14, 22, 0.7);
+            padding: 10px 14px;
+            border-radius: 4px;
             font-size: 0.8rem;
-            color: #8f95b2;
+            font-family: monospace;
+            border-right: 2px solid var(--gold);
             z-index: 10;
+            line-height: 1.4;
+            color: #a0aec0;
         }
-
-        .debug-panel span { color: #58a6ff; }
+        .controls-hint span { color: var(--gold); }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div class="debug-panel">
-        ENGINE: <span>WebGL_Three.js_r128</span><br>
-        RENDER_MODE: <span>Realtime_Mesh_3D</span><br>
-        CONTROLS: <span>WASD [Active]</span><br>
-        PARTICLES: <span>Snow_System_ON</span>
+    <div class="controls-hint">
+        <span>[TECLADO]</span> WASD para Volar<br>
+        <span>[ESPACIO]</span> Ascender al Cielo<br>
+        <span>[MOUSE]</span> Arrastrar para Vista 360°
     </div>
 
     <canvas id="canvas-3d"></canvas>
 
-    <div class="hud-container">
-        <h2 class="hud-title">Vuelo en el Septentrión</h2>
-        <p class="hud-text">
-            Explorando el espacio poligonal a través de un motor WebGL en tiempo real. La malla del terreno genera valles y elevaciones matemáticas mientras el sistema de partículas calcula la caída de nieve en un espacio tridimensional real.
+    <div class="hud-container" id="hud-box">
+        <h2 class="hud-title" id="story-title">Capítulo I: El Despertar en Midgard</h2>
+        <p class="hud-text" id="story-text">
+            Bajo un firmamento cargado de augurios, un felino de los bosques sagrados despierta. No arrastra el carro de Freyja esta noche; en su lugar, se aferra a las escamas doradas de una bestia alada ancestral. Las montañas rúnicas tiemblan bajo la nieve. Iniciá el vuelo para cruzar el horizonte.
         </p>
+        <div class="hud-lore" id="story-lore">
+            <span>Mitos de las Eddas</span>
+            "Se dice que los drakkers vikingos cobraban vida cuando el viento del norte soplaba con suficiente fuerza, guiados por los ojos de los guardianes silenciosos de la noche."
+        </div>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN DEL MOTOR WEBGL REAL ---
         let scene, camera, renderer, terrain, player, snowParticles;
-        let keys = { w: false, a: false, s: false, d: false };
-        let moveSpeed = 0.8;
-        let rotationSpeed = 0.03;
+        let keys = { w: false, a: false, s: false, d: false, ' ': false };
+        
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let cameraAngleX = 0; 
+        let cameraAngleY = 0.25; 
+        let cameraDistance = 20; 
+
+        // Base de datos de la historia según las acciones del jugador
+        const sagaChronicles = {
+            intro: {
+                title: "Capítulo I: El Despertar en Midgard",
+                text: "Bajo un firmamento cargado de augurios, un felino de los bosques sagrados despierta. No arrastra el carro de Freyja esta noche; en su lugar, se aferra a las escamas doradas de una bestia alada ancestral. Las montañas rúnicas tiemblan bajo la nieve. Iniciá el vuelo para cruzar el horizonte.",
+                source: "Mitos de las Eddas",
+                quote: "Se dice que los drakkers vikingos cobraban vida cuando el viento del norte soplaba con suficiente fuerza."
+            },
+            flying: {
+                title: "Capítulo II: Las Corrientes del Hávamál",
+                text: "El drakker alado bate sus extensiones poligonales cortando el viento helado. Abajo, el relieve de las montañas escandinavas traza el mapa de los antiguos clanes. Volás sin miedo, buscando el umbral de la fortaleza medieval oculta entre la bruma mística.",
+                source: "Hávamál, Estrofa 2",
+                quote: "¡Salud al anfitrión! Un huésped ha entrado, ¿dónde se va a sentar? Muy ansioso está quien en las brasas debe probar su suerte."
+            },
+            climbing: {
+                title: "Capítulo III: El Camino al Valhalla",
+                text: "Ascendiendo con fuerza hacia las estrellas de WebGL. La gravedad pierde su poder mientras te elevás por encima de los picos nevados. El frío de la alta atmósfera purifica las dudas; desde acá arriba, el destino del viajero se vuelve claro y eterno.",
+                source: "Sabiduría de Odín",
+                quote: "No hay mejor equipaje para el viajero que la cordura y el buen juicio; es mejor que las riquezas en tierras extrañas."
+            }
+        };
 
         function init() {
             const canvas = document.getElementById('canvas-3d');
-            
-            // 1. Crear la Escena y la Cámara 3D
+
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x05070c);
-            scene.fog = new THREE.FogExp2(0x05070c, 0.015); // Niebla de profundidad real
+            scene.background = new THREE.Color(0x020408);
+            scene.fog = new THREE.FogExp2(0x020408, 0.015);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 8, 25); // Posicionada detrás y arriba del jugador
 
-            // 2. Renderizador WebGL de alto rendimiento
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
-            // 3. Iluminación de la Escena
-            const ambientLight = new THREE.AmbientLight(0x1a233a, 1.5); // Luz de entorno nocturna
+            // Iluminación cinemática mística (Azul y Oro)
+            const ambientLight = new THREE.AmbientLight(0x0f1526, 2.5);
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0xd4af37, 1.2); // Luz dorada direccional
-            directionalLight.position.set(5, 20, 10);
-            scene.add(directionalLight);
+            const auroraLight = new THREE.HemisphereLight(0x00f38d, 0x0b0f19, 0.8); // Reflejo sutil de aurora boreal
+            scene.add(auroraLight);
 
-            // 4. Generación del Terreno 3D Real (Malla con relieve)
-            const terrainGeo = new THREE.PlaneGeometry(500, 500, 60, 60);
-            terrainGeo.rotateX(-Math.PI / 2); // Acostar el plano
+            const sunLight = new THREE.DirectionalLight(0xd4af37, 1.8);
+            sunLight.position.set(20, 50, 15);
+            scene.add(sunLight);
 
-            // Modificar los vértices matemáticamente para simular montañas y valles reales
+            // Terreno Sólido Facetado de Alta Calidad
+            const terrainGeo = new THREE.PlaneGeometry(500, 500, 70, 70);
+            terrainGeo.rotateX(-Math.PI / 2);
+
             const pos = terrainGeo.attributes.position;
             for (let i = 0; i < pos.count; i++) {
                 let x = pos.getX(i);
                 let z = pos.getZ(i);
-                // Usamos ondas senoidales para crear relieve poligonal real
-                let y = Math.sin(x * 0.05) * Math.cos(z * 0.05) * 6;
-                pos.setY(i, y);
+                let y1 = Math.sin(x * 0.04) * Math.cos(z * 0.04) * 11;
+                let y2 = Math.sin(x * 0.12) * Math.sin(z * 0.12) * 2.5;
+                pos.setY(i, y1 + y2);
             }
             terrainGeo.computeVertexNormals();
 
-            // Material sombreado que reacciona a la luz real
             const terrainMat = new THREE.MeshStandardMaterial({
-                color: 0x0f1423,
-                wireframe: true, // Estilo rejilla de desarrollo de videojuegos
-                roughness: 0.8
+                color: 0x090d16,
+                roughness: 0.85,
+                metalness: 0.1,
+                flatShading: true
             });
             terrain = new THREE.Mesh(terrainGeo, terrainMat);
             scene.add(terrain);
 
-            // 5. El Objeto del Jugador (Geometría estilizada de un drakker/montura voladora)
-            const playerGeo = new THREE.ConeGeometry(1.5, 4, 4);
-            playerGeo.rotateX(Math.PI / 2); // Orientar el cono hacia adelante
-            const playerMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.8 });
-            player = new THREE.Mesh(playerGeo, playerMat);
-            player.position.set(0, 6, 0);
+            // El Jugador: Un Drakker Alado Geométrico Sólido
+            player = new THREE.Group();
+            
+            // Mascarón de proa/Cuerpo del Dragón
+            const bodyGeo = new THREE.ConeGeometry(1, 4, 5);
+            bodyGeo.rotateX(Math.PI / 2);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.2, metalness: 0.8, flatShading: true });
+            const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+            player.add(bodyMesh);
+
+            // Alas Móviles
+            const wingGeo = new THREE.BoxGeometry(3.5, 0.08, 1.2);
+            const wingMat = new THREE.MeshStandardMaterial({ color: 0xb5921a, roughness: 0.4, flatShading: true });
+            
+            const leftWing = new THREE.Mesh(wingGeo, wingMat);
+            leftWing.position.set(-2, 0, 0);
+            leftWing.name = "leftWing";
+            player.add(leftWing);
+
+            const rightWing = leftWing.clone();
+            rightWing.position.set(2, 0, 0);
+            rightWing.name = "rightWing";
+            player.add(rightWing);
+
+            player.position.set(0, 8, 0);
             scene.add(player);
 
-            // 6. Sistema de Partículas de Nieve Tridimensional Real
+            // Tormenta de Nieve Tridimensional
             const snowGeo = new THREE.BufferGeometry();
-            const snowCount = 400;
+            const snowCount = 500;
             const snowPositions = new Float32Array(snowCount * 3);
 
             for(let i=0; i < snowCount * 3; i+=3) {
-                snowPositions[i] = (Math.random() - 0.5) * 200;
-                snowPositions[i+1] = Math.random() * 50;
-                snowPositions[i+2] = (Math.random() - 0.5) * 200;
+                snowPositions[i] = (Math.random() - 0.5) * 250;
+                snowPositions[i+1] = Math.random() * 60;
+                snowPositions[i+2] = (Math.random() - 0.5) * 250;
             }
 
             snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
-            const snowMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.3, transparent: true, opacity: 0.7 });
+            const snowMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.25, transparent: true, opacity: 0.8 });
             snowParticles = new THREE.Points(snowGeo, snowMat);
             scene.add(snowParticles);
+
+            // Control del Mouse 360°
+            canvas.addEventListener('mousedown', (e) => { isDragging = true; });
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                let deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
+                cameraAngleX -= deltaMove.x * 0.006;
+                cameraAngleY += deltaMove.y * 0.006;
+                cameraAngleY = Math.max(0.05, Math.min(Math.PI / 2.3, cameraAngleY));
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+            canvas.addEventListener('mousedown', (e) => { previousMousePosition = { x: e.clientX, y: e.clientY }; });
 
             // Eventos del Teclado
             window.addEventListener('keydown', (e) => handleKeys(e, true));
@@ -187,7 +270,7 @@
         }
 
         function handleKeys(e, isPressed) {
-            const key = e.key.toLowerCase();
+            let key = e.key.toLowerCase();
             if (key in keys) keys[key] = isPressed;
         }
 
@@ -197,49 +280,71 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- BUCLE DE ANIMACIÓN Y FÍSICAS (60 FPS REALES) ---
+        function updateNarrative(type) {
+            const data = sagaChronicles[type];
+            document.getElementById('story-title').innerText = data.title;
+            document.getElementById('story-text').innerText = data.text;
+            document.getElementById('story-lore').innerHTML = `<span>${data.source}</span>"${data.quote}"`;
+        }
+
+        let clock = new THREE.Clock();
+
         function animate() {
             requestAnimationFrame(animate);
+            let delta = clock.getDelta();
+            let time = clock.getElapsedTime();
+            let speed = 0.5;
 
-            // Movimiento basado en la rotación actual del personaje
+            // Manejo de físicas y actualización de la saga según movimientos
+            if (keys.w || keys.s || keys.a || keys.d) {
+                updateNarrative('flying');
+            }
+
             if (keys.w) {
-                player.position.x -= Math.sin(player.rotation.y) * moveSpeed;
-                player.position.z -= Math.cos(player.rotation.y) * moveSpeed;
+                player.position.x -= Math.sin(cameraAngleX) * speed;
+                player.position.z -= Math.cos(cameraAngleX) * speed;
+                player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, cameraAngleX, 0.1);
             }
             if (keys.s) {
-                player.position.x += Math.sin(player.rotation.y) * moveSpeed;
-                player.position.z += Math.cos(player.rotation.y) * moveSpeed;
+                player.position.x += Math.sin(cameraAngleX) * speed;
+                player.position.z += Math.cos(cameraAngleX) * speed;
+                player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, cameraAngleX + Math.PI, 0.1);
+            }
+            if (keys[' ']) {
+                player.position.y += 0.25;
+                updateNarrative('climbing');
             }
 
-            // Rotación e inclinación lateral (Bank/Roll) al girar
-            if (keys.a) {
-                player.rotation.y += rotationSpeed;
-                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, 0.4, 0.1); // Inclinación real
-            } else if (keys.d) {
-                player.rotation.y -= rotationSpeed;
-                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, -0.4, 0.1);
-            } else {
-                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, 0, 0.1); // Regresar al centro
+            // Animación del aleteo del dragón medieval
+            let leftWing = player.getObjectByName("leftWing");
+            let rightWing = player.getObjectByName("rightWing");
+            if (leftWing && rightWing) {
+                leftWing.rotation.z = Math.sin(time * 6) * 0.25;
+                rightWing.rotation.z = -Math.sin(time * 6) * 0.25;
             }
 
-            // Hacer que la cámara siga al jugador suavemente (Cámara en tercera persona)
-            camera.position.x = player.position.x + Math.sin(player.rotation.y) * 20;
-            camera.position.z = player.position.z + Math.cos(player.rotation.y) * 20;
-            camera.position.y = THREE.MathUtils.lerp(camera.position.y, player.position.y + 4, 0.05);
-            camera.lookAt(player.position);
+            // Descenso de planeo suave (Gravedad rúnica)
+            if(player.position.y > 5 && !keys[' ']) {
+                player.position.y -= 0.03;
+            }
 
-            // Animación física de la nieve cayendo en el espacio
+            // Trigonometría de la órbita de cámara 360
+            camera.position.x = player.position.x + cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
+            camera.position.z = player.position.z + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
+            camera.position.y = player.position.y + cameraDistance * Math.sin(cameraAngleY);
+            camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z);
+
+            // Ciclo infinito de la caída de nieve
             const positions = snowParticles.geometry.attributes.position.array;
             for(let i = 1; i < positions.length; i += 3) {
-                positions[i] -= 0.1; // Velocidad de caída
-                if (positions[i] < 0) positions[i] = 40; // Reiniciar arriba cuando toca el suelo
+                positions[i] -= 0.15;
+                if (positions[i] < 0) positions[i] = 55;
             }
             snowParticles.geometry.attributes.position.needsUpdate = true;
 
             renderer.render(scene, camera);
         }
 
-        // Ejecutar el motor al cargar la página
         window.onload = init;
     </script>
 </body>
