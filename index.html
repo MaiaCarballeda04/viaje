@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Skogkatt's Journey</title>
+    <!-- Tipografías elegantes y de estilo nórdico medieval -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- VARIABLES CSS (PALETA NÓRDICA Y TIPOGRAFÍA) --- */
+        :root {
+            --bg-dark: #0d1117;
+            --stone-gray: #2d3748;
+            --fjord-blue: #1a202c;
+            --aurora-green: rgba(0, 243, 141, 0.15);
+            --gold-accent: #d4af37;
+            --text-light: #e2e8f0;
+            --text-muted: #a0aec0;
+            --font-title: 'Cinzel', serif;
+            --font-medieval: 'Almendra', serif;
+            --font-body: 'Cormorant Garamond', serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: var(--font-body);
+            font-size: 1.25rem;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        .book-container {
+            width: 90%;
+            max-width: 750px;
+            background: radial-gradient(circle at top, #1a202c, #0f141c);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0, 0, 0, 0.5);
+            padding: 2.5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Marcador de esquina estilo runa antigua */
+        .book-container::before {
+            content: "ᛟ";
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            font-size: 1rem;
+            color: rgba(212, 175, 55, 0.3);
+            font-family: var(--font-title);
+        }
+
+        /* --- PAISAJES CSS (VISTAS NÓRDICAS) --- */
+        .view-viewport {
+            width: 100%;
+            height: 220px;
+            background-color: #05070a;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.15);
+        }
+
+        /* Efecto de Aurora Boreal con gradientes animados */
+        .aurora-sky {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, var(--aurora-green), transparent, rgba(0, 180, 216, 0.15), transparent);
+            background-size: 50% 100%;
+            animation: moveAurora 12s linear infinite;
+            filter: blur(20px);
+            top: -20px;
+        }
+
+        @keyframes moveAurora {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* Montañas CSS usando clip-path */
+        .mountain-back {
+            position: absolute;
+            bottom: 0;
+            width: 120%;
+            height: 120px;
+            background: linear-gradient(180deg, #1e293b, #0f172a);
+            clip-path: polygon(0% 100%, 20% 30%, 45% 65%, 65% 20%, 85% 55%, 100% 100%);
+            left: -10%;
+            opacity: 0.7;
+        }
+
+        .mountain-front {
+            position: absolute;
+            bottom: 0;
+            width: 110%;
+            height: 80px;
+            background: linear-gradient(180deg, #334155, #0f172a);
+            clip-path: polygon(0% 100%, 15% 50%, 35% 25%, 55% 60%, 75% 35%, 90% 70%, 100% 100%);
+            left: -5%;
+        }
+
+        /* El Gatito Vikingo 🐱 (Hecho con CSS y pseudo-elementos) */
+        .cat-hero {
+            position: absolute;
+            bottom: 15px;
+            left: 10%;
+            font-size: 2.5rem;
+            z-index: 5;
+            transition: transform 0.5s ease;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+        }
+
+        /* Mini Casco Vikingo CSS flotando sobre el gatito */
+        .cat-hero::before {
+            content: "▲";
+            font-size: 0.6rem;
+            color: #94a3b8;
+            position: absolute;
+            top: -2px;
+            left: 14px;
+            transform: rotate(180deg);
+        }
+
+        /* --- NARRATIVA Y TEXTO --- */
+        .story-title {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            color: var(--gold-accent);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .story-text {
+            font-size: 1.35rem;
+            margin-bottom: 1.5rem;
+            text-align: justify;
+            color: var(--text-light);
+        }
+
+        /* Bloque de datos históricos o refranes */
+        .lore-box {
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid var(--gold-accent);
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            font-style: italic;
+            color: var(--text-muted);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .lore-box span {
+            display: block;
+            font-family: var(--font-medieval);
+            color: var(--gold-accent);
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- BOTONES DE DECISIÓN (CSS GRID) --- */
+        .choices-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 500px) {
+            .choices-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .choice-btn {
+            background: transparent;
+            border: 1px solid rgba(160, 174, 192, 0.4);
+            color: var(--text-light);
+            font-family: var(--font-body);
+            font-size: 1.2rem;
+            padding: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .choice-btn:hover {
+            border-color: var(--gold-accent);
+            background: rgba(214, 175, 87, 0.05);
+            box-shadow: 0 0 10px rgba(214, 175, 87, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Transición de capítulos */
+        .fade-in {
+            animation: fadeInEffect 0.6s ease-in-out forwards;
+        }
+
+        @keyframes fadeInEffect {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="book-container fade-in" id="game-card">
+        <!-- El Viewport Visual del Viaje -->
+        <div class="view-viewport">
+            <div class="aurora-sky"></div>
+            <div class="mountain-back"></div>
+            <div class="mountain-front"></div>
+            <div class="cat-hero" id="cat-character">🐱</div>
+        </div>
+
+        <!-- El Contenido Dinámico del Relato -->
+        <h1 class="story-title" id="title">Midgard</h1>
+        <p class="story-text" id="text">
+            Un gran felino de los bosques, espeso y de mirada atenta, se despereza sobre una antigua roca cubierta de runas líquenes. El viento del norte sopla con fuerza, trayendo consigo el aroma de la resina de pino y la sal de los fiordos lejanos. El viaje hacia las tierras altas está por comenzar.
+        </p>
+
+        <div class="lore-box" id="lore">
+            <span>Fragmento de las Sagas</span>
+            "En los drakkers norteños, ningún guerrero zarpaba sin un felino a bordo. Eran los guardianes de las provisiones y los elegidos de la diosa Freyja, bendecidos con ojos que ven en la noche más profunda."
+        </div>
+
+        <!-- Las Opciones Interactivas -->
+        <div class="choices-grid" id="choices">
+            <button class="choice-btn" onclick="nextStep(2, 'left')">Seguir el rastro del viento</button>
+            <button class="choice-btn" onclick="nextStep(2, 'right')">Descifrar las runas de la roca</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATOS DE LA HISTORIA E ITERACIÓN ---
+        const storyData = {
+            2: {
+                title: "El Cruce del Bifröst",
+                text: "El sendero asciende de golpe hacia un acantilado escarpado. Sobre el cielo del fiordo, las luces danzan en tonos esmeralda y violeta. El felino se detiene al borde del abismo rumiando su próximo paso. Sabe que la mente clara corta más profundo que cualquier acero.",
+                loreTitle: "Consejo del Hávamál (Estrasburgo)",
+                loreText: '"Un viajero sabio necesita una mente despejada, pues la duda es el fardo más pesado en los caminos menos transitados. La verdad siempre halla su propio rumbo."',
+                btn1: "Confiar en la intuición felina",
+                btn2: "Esperar pacientemente el alba",
+                next1: 3,
+                next2: 3
+            },
+            3: {
+                title: "El Salón del Fuego",
+                text: "El viaje concluye tras los pesados portones de madera de una gran sala asgardiana. El rugido de las tormentas se queda afuera. El gato camina con paso firme hacia el hogar encendido, donde las brasas crujen suavemente, encontrando por fin el descanso que todo guerrero y lector constante merece.",
+                loreTitle: "Hecho Histórico",
+                loreText: "Los antiguos escandinavos consideraban que el hogar y los libros no eran prisiones, sino refugios de paz. Aquellos capaces de reconstruirse en silencio siempre encuentran un fuego cálido esperando al final del camino.",
+                btn1: "Volver a empezar el viaje",
+                btn2: "Cerrar las Crónicas",
+                next1: 1,
+                next2: null
+            }
+        };
+
+        function nextStep(step, direction) {
+            const card = document.getElementById('game-card');
+            const cat = document.getElementById('cat-character');
+            
+            // Efecto visual de movimiento para el gatito según la opción elegida
+            if(direction === 'left') {
+                cat.style.transform = "translateX(50px) scaleX(1)";
+            } else if(direction === 'right') {
+                cat.style.transform = "translateX(120px) translateY(-10px) scaleX(-1)";
+            }
+
+            // Aplicar animación de desaparición y aparición suave al cambiar el texto
+            card.style.animation = 'none';
+            card.offsetHeight; /* trigger reflow */
+            card.style.animation = 'fadeInEffect 0.6s ease-in-out forwards';
+
+            if (step === 1) {
+                // Reiniciar el juego
+                cat.style.transform = "translateX(0px) scaleX(1)";
+                document.getElementById('title').innerText = "Midgard";
+                document.getElementById('text').innerText = "Un gran felino de los bosques, espeso y de mirada atenta, se despereza sobre una antigua roca cubierta de runas líquenes. El viento del norte sopla con fuerza, trayendo consigo el aroma de la resina de pino y la sal de los fiordos lejanos. El viaje hacia las tierras altas está por comenzar.";
+                document.getElementById('lore').innerHTML = `<span>Fragmento de las Sagas</span>"En los drakkers norteños, ningún guerrero zarpaba sin un felino a bordo. Eran los guardianes de las provisiones y los elegidos de la diosa Freyja, bendecidos con ojos que ven en la noche más profunda."`;
+                document.getElementById('choices').innerHTML = `
+                    <button class="choice-btn" onclick="nextStep(2, 'left')">Seguir el rastro del viento</button>
+                    <button class="choice-btn" onclick="nextStep(2, 'right')">Descifrar las runas de la roca</button>
+                `;
+                return;
+            }
+
+            const data = storyData[step];
+            if (!data) return;
+
+            // Actualizar textos de la interfaz de forma limpia
+            document.getElementById('title').innerText = data.title;
+            document.getElementById('text').innerText = data.text;
+            document.getElementById('lore').innerHTML = `<span>${data.loreTitle}</span>"${data.loreText}"`;
+
+            // Configurar los botones de la siguiente fase
+            if (data.next2 === null) {
+                // Pantalla final
+                document.getElementById('choices').innerHTML = `
+                    <button class="choice-btn" onclick="nextStep(1, 'left')">${data.btn1}</button>
+                    <button class="choice-btn" onclick="window.close(); alert('Crónica guardada en el escudo.')">${data.btn2}</button>
+                `;
+            } else {
+                document.getElementById('choices').innerHTML = `
+                    <button class="choice-btn" onclick="nextStep(${data.next1}, 'left')">${data.btn1}</button>
+                    <button class="choice-btn" onclick="nextStep(${data.next2}, 'right')">${data.btn2}</button>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
