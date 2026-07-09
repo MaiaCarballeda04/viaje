@@ -3,353 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Skogkatt's Journey: 3D Chronicles</title>
+    <title>Saga of the Flying Skogkatt - 3D WASD Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-dark: #0a0d14;
-            --gold-accent: #d4af37;
-            --text-light: #e2e8f0;
-            --text-muted: #a0aec0;
+            --bg-sky: #0a0e17;
+            --gold: #d4af37;
             --font-title: 'Cinzel', serif;
-            --font-medieval: 'Almendra', serif;
             --font-body: 'Cormorant Garamond', serif;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-light);
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-sky);
+            color: #e2e8f0;
             font-family: var(--font-body);
-            font-size: 1.25rem;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow-x: hidden;
-            perspective: 1000px; /* Habilita el espacio 3D en el navegador */
+            overflow: hidden;
         }
 
-        .book-container {
-            width: 90%;
-            max-width: 780px;
-            background: radial-gradient(circle at top, #111622, #07090e);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 12px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.6);
-            padding: 2.5rem;
-            position: relative;
-            z-index: 10;
+        /* --- CONTENEDOR 3D PRINCIPAL (CÁMARA) --- */
+        #viewport-3d-world {
+            width: 100vw;
+            height: 100vh;
+            perspective: 700px; /* Profundidad de campo estilo Hogwarts Legacy */
+            perspective-origin: 50% 45%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* El Espacio Tridimensional que rotará y se moverá con WASD */
+        #scene-3d {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: transform 0.1s linear; /* Movimiento fluido */
+        }
+
+        /* --- ENTORNO Y ELEMENTOS DEL ESCENARIO --- */
+        .skybox {
+            position: absolute;
+            width: 4000px;
+            height: 2000px;
+            background: linear-gradient(180deg, #020408, #111726, #1b2336);
+            transform: translate3d(-2000px, -1000px, -1500px);
+            filter: blur(2px);
+        }
+
+        /* Aurora Boreal generada dinámicamente al fondo */
+        .aurora {
+            position: absolute;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 141, 0.15), transparent, rgba(0, 180, 216, 0.1), transparent);
+            filter: blur(40px);
+            top: 10%;
+        }
+
+        /* Torres del castillo distribuidas en coordenadas Z tridimensionales */
+        .castle-tower {
+            position: absolute;
+            bottom: -200px;
+            width: 160px;
+            height: 600px;
+            background: linear-gradient(0deg, #05070c, #101624);
+            border: 1px solid rgba(212, 175, 55, 0.05);
+            clip-path: polygon(20% 100%, 20% 20%, 0% 20%, 50% 0%, 100% 20%, 80% 20%, 80% 100%);
             transform-style: preserve-3d;
         }
 
-        /* --- VIEWPORT CON PERSPECTIVA 3D (EFECTO HOGWARTS LEGACY) --- */
-        .view-3d-viewport {
-            width: 100%;
-            height: 280px;
-            background: linear-gradient(180deg, #020408, #0f1423);
+        /* --- EL PERSONAJE VOLADOR (FIJO EN EL CENTRO DE LA PANTALLA) --- */
+        #player-mount {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            width: 120px;
+            height: 120px;
+            margin-left: -60px;
+            margin-top: -60px;
+            font-size: 4.5rem;
+            text-align: center;
+            z-index: 100;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.6));
+            transform-style: preserve-3d;
+            animation: hoverFlight 3s ease-in-out infinite; /* Balanceo constante de vuelo */
+        }
+
+        /* El Gatito Vikingo encima del Dragón */
+        #player-mount::before {
+            content: "🐱";
+            font-size: 2.2rem;
+            position: absolute;
+            top: -25px;
+            left: 32px;
+            animation: catBounce 1.5s ease-in-out infinite;
+        }
+
+        @keyframes hoverFlight {
+            0%, 100% { transform: translateY(0) rotateX(2deg); }
+            50% { transform: translateY(-12px) rotateX(-2deg); }
+        }
+
+        @keyframes catBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        /* --- CRISTAL DE INTERFAZ LITERARIA (HUD) --- */
+        .hud-overlay {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 680px;
+            background: rgba(10, 14, 23, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
             border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 2rem;
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            /* Crea la sensación de profundidad de campo */
-            perspective: 800px;
+            padding: 1.5rem;
+            z-index: 200;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7);
         }
 
-        /* Capa 1: Aurora Boreal de Fondo Místico */
-        .layer-sky {
-            position: absolute;
-            width: 140%;
-            height: 120%;
-            top: -10%;
-            left: -20%;
-            background: linear-gradient(90deg, transparent, rgba(0, 243, 141, 0.12), transparent, rgba(0, 180, 216, 0.12), transparent);
-            background-size: 50% 100%;
-            animation: moveAurora 20s linear infinite;
-            filter: blur(25px);
-            transform: translateZ(-300px) scale(2); /* Profundidad máxima */
-        }
-
-        @keyframes moveAurora {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 200% 0%; }
-        }
-
-        /* Capa 2: El Dragón Alado en las Alturas 🐉 */
-        .layer-dragon {
-            position: absolute;
-            top: 15%;
-            right: 15%;
-            font-size: 3rem;
-            opacity: 0.6;
-            filter: drop-shadow(0 0 15px rgba(255, 69, 0, 0.2));
-            transform: translateZ(-200px) scale(1.5);
-            animation: flyDragon 8s ease-in-out infinite;
-            user-select: none;
-        }
-
-        @keyframes flyDragon {
-            0%, 100% { transform: translateZ(-200px) translateY(0) rotate(0deg); }
-            50% { transform: translateZ(-150px) translateY(-15px) rotate(-5deg); }
-        }
-
-        /* Capa 3: Montañas y Silueta de Fortaleza Medieval */
-        .layer-mountains {
-            position: absolute;
-            bottom: 0;
-            width: 120%;
-            height: 140px;
-            background: linear-gradient(180deg, #161f33, #05070c);
-            clip-path: polygon(0% 100%, 15% 30%, 30% 60%, 45% 15%, 55% 45%, 70% 20%, 85% 55%, 100% 35%, 100% 100%);
-            left: -10%;
-            transform: translateZ(-100px) scale(1.3);
-        }
-
-        .layer-fortress {
-            position: absolute;
-            bottom: 0;
-            right: 20%;
-            width: 100px;
-            height: 90px;
-            background: #090d16;
-            /* Dibuja una torre del castillo mediante clip-path */
-            clip-path: polygon(20% 100%, 20% 40%, 10% 40%, 10% 20%, 30% 20%, 30% 0%, 40% 0%, 40% 20%, 60% 20%, 60% 0%, 70% 0%, 70% 20%, 90% 20%, 90% 40%, 80% 40%, 80% 100%);
-            transform: translateZ(-50px) scale(1.1);
-            opacity: 0.95;
-        }
-
-        /* Capa 4: Primer Plano - El Gatito Aventurero 🐱 */
-        .layer-hero-cat {
-            position: absolute;
-            bottom: 20px;
-            left: 12%;
-            font-size: 3rem;
-            transform: translateZ(20px); /* Resalta hacia adelante en el espacio 3D */
-            filter: drop-shadow(0 8px 12px rgba(0,0,0,0.7));
-            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            user-select: none;
-        }
-
-        .layer-hero-cat::before {
-            content: "▲";
-            font-size: 0.65rem;
-            color: #a1a1aa;
-            position: absolute;
-            top: 2px;
-            left: 17px;
-            transform: rotate(180deg);
-        }
-
-        /* --- DISEÑO DE LA INTERFAZ NARRATIVA --- */
-        .story-title {
+        .hud-title {
             font-family: var(--font-title);
-            font-size: 1.9rem;
-            color: var(--gold-accent);
-            text-align: center;
-            margin-bottom: 1.5rem;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.6);
-        }
-
-        .story-text {
-            font-size: 1.35rem;
-            margin-bottom: 1.5rem;
-            text-align: justify;
-            color: var(--text-light);
-        }
-
-        .lore-box {
-            background: rgba(255, 255, 255, 0.015);
-            border-left: 3px solid var(--gold-accent);
-            padding: 1.2rem 1.5rem;
-            margin-bottom: 2rem;
-            font-style: italic;
-            color: var(--text-muted);
-            border-radius: 0 6px 6px 0;
-            box-shadow: inset 10px 0 20px rgba(0,0,0,0.2);
-        }
-
-        .lore-box span {
-            display: block;
-            font-family: var(--font-medieval);
-            color: var(--gold-accent);
-            font-size: 1.15rem;
-            margin-bottom: 0.4rem;
-            text-transform: uppercase;
+            color: var(--gold);
+            font-size: 1.3rem;
             letter-spacing: 1px;
-        }
-
-        .choices-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.2rem;
-        }
-
-        @media (min-width: 500px) {
-            .choices-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .choice-btn {
-            background: rgba(15, 20, 32, 0.5);
-            border: 1px solid rgba(212, 175, 55, 0.25);
-            color: var(--text-light);
-            font-family: var(--font-body);
-            font-size: 1.2rem;
-            padding: 1.1rem;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
             text-align: center;
         }
 
-        .choice-btn:hover {
-            border-color: var(--gold-accent);
-            background: rgba(214, 175, 87, 0.07);
-            box-shadow: 0 0 15px rgba(214, 175, 87, 0.15);
-            transform: translateY(-2px) translateZ(10px);
+        .hud-text {
+            font-size: 1.15rem;
+            color: #cbd5e1;
+            text-align: justify;
+            margin-bottom: 0.8rem;
         }
 
-        .fade-in {
-            animation: fadeInEffect 0.7s ease-in-out forwards;
+        .hud-lore {
+            font-family: 'Almendra', serif;
+            font-style: italic;
+            color: #94a3b8;
+            font-size: 1rem;
+            border-top: 1px solid rgba(212, 175, 55, 0.1);
+            padding-top: 0.5rem;
+            text-align: center;
         }
 
-        @keyframes fadeInEffect {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Indicador de controles en la esquina superior */
+        .controls-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-family: monospace;
+            border-left: 2px solid var(--gold);
+            z-index: 200;
         }
     </style>
 </head>
 <body>
 
-    <div class="book-container fade-in" id="game-card">
-        <!-- El Viewport de las Vistas 3D Interactivas -->
-        <div class="view-3d-viewport" id="viewport-3d">
-            <div class="layer-sky" id="l-sky"></div>
-            <div class="layer-dragon" id="l-dragon">🐉</div>
-            <div class="layer-mountains" id="l-mountains"></div>
-            <div class="layer-fortress" id="l-fortress"></div>
-            <div class="layer-hero-cat" id="cat-character">🐱</div>
-        </div>
+    <div class="controls-badge">
+        [CONTROLES 3D]<br>
+        W / S : Avanzar / Retroceder<br>
+        A / D : Girar Cámara<br>
+        CLIC  : Elevar Vuelo
+    </div>
 
-        <h1 class="story-title" id="title">La Fortaleza de J things</h1>
-        <p class="story-text" id="text">
-            Las siluetas de piedra de una antigua fortaleza recortan el horizonte del septentrión. Arriba, entre los pliegues de la bruma, las alas de una criatura ancestral baten el aire frío. Abajo, desafiando el viento, un sigiloso felino de los bosques orienta sus pasos hacia el torreón.
+    <!-- Escenario Web 3D -->
+    <div id="viewport-3d-world">
+        <div id="scene-3d">
+            <div class="skybox">
+                <div class="aurora"></div>
+            </div>
+            
+            <!-- Torres posicionadas dinámicamente en el espacio tridimensional (X, Y, Z) -->
+            <div class="castle-tower" style="transform: translate3d(-300px, 200px, -600px);"></div>
+            <div class="castle-tower" style="transform: translate3d(400px, 150px, -900px) scale(1.2);"></div>
+            <div class="castle-tower" style="transform: translate3d(-100px, 300px, -1200px) scale(0.8);"></div>
+            <div class="castle-tower" style="transform: translate3d(600px, 250px, -400px) scale(0.9);"></div>
+            <div class="castle-tower" style="transform: translate3d(-700px, 100px, -800px) scale(1.1);"></div>
+        </div>
+    </div>
+
+    <!-- Personaje Principal Flotante (Fijo ante la cámara) -->
+    <div id="player-mount">🐉</div>
+
+    <!-- Cuadro de Diálogo HUD -->
+    <div class="hud-overlay">
+        <h2 class="hud-title" id="hud-title">Vuelo sobre las Almenas</h2>
+        <p class="hud-text" id="hud-desc">
+            Surcando las corrientes frías del norte, las alas de la bestia dominan el viento. Sientes el control en tus manos mientras la fortaleza se desplaza debajo de ti en el espacio.
         </p>
-
-        <div class="lore-box" id="lore">
-            <span>Mitos de las Eddas</span>
-            "En el imaginario medieval, los drakkers o barcos dragón no solo emulaban a las grandes bestias de las leyendas para infundir temor, sino que llevaban figuras estilizadas para ahuyentar a los espíritus de la costa."
-        </div>
-
-        <div class="choices-grid" id="choices">
-            <button class="choice-btn" onclick="nextStep(2, 'left')">Rodear los muros del torreón</button>
-            <button class="choice-btn" onclick="nextStep(2, 'right')">Observar el vuelo de la bestia</button>
+        <div class="hud-lore" id="hud-lore">
+            "Las crónicas cuentan que aquellos que dominaban las alturas poseían una mirada libre de dudas." — Adaptación de las Eddas Poéticas.
         </div>
     </div>
 
     <script>
-        // --- EFECTO DE MOVIMIENTO DINÁMICO 3D CON EL MOUSE ---
-        const view = document.getElementById('viewport-3d');
-        const lSky = document.getElementById('l-sky');
-        const lDragon = document.getElementById('l-dragon');
-        const lMts = document.getElementById('l-mountains');
-        const lFort = document.getElementById('l-fortress');
-        const lCat = document.getElementById('cat-character');
+        // --- MOTOR DE MOVIMIENTO EN ESPACIO TRIDIMENSIONAL ---
+        let posX = 0;
+        let posY = 0;
+        let posZ = 0;
+        let rotationY = 0;
 
-        view.addEventListener('mousemove', (e) => {
-            const rect = view.getBoundingClientRect();
-            // Calcula la posición del mouse relativa al centro del viewport
-            const x = e.clientX - rect.left - (rect.width / 2);
-            const y = e.clientY - rect.top - (rect.height / 2);
+        const scene = document.getElementById('scene-3d');
+        const mount = document.getElementById('player-mount');
 
-            // Mueve cada capa con una intensidad diferente según su "profundidad 3D"
-            lSky.style.transform = `translateZ(-300px) scale(2) translate(${x * 0.03}px, ${y * 0.03}px)`;
-            lDragon.style.transform = `translateZ(-180px) scale(1.5) translate(${x * -0.05}px, ${y * -0.05}px)`;
-            lMts.style.transform = `translateZ(-100px) scale(1.3) translate(${x * 0.02}px, ${y * 0.01}px)`;
-            lFort.style.transform = `translateZ(-50px) scale(1.1) translate(${x * -0.02}px, 0px)`;
-            lCat.style.transform = `translateZ(20px) translate(${x * 0.06}px, ${y * 0.04}px)`;
-        });
+        // Escucha de Teclas WASD
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            const speed = 25; // Velocidad de movimiento espacial
+            const rotSpeed = 3; // Grados de rotación de la cámara
 
-        // Restablece la posición cuando el mouse sale
-        view.addEventListener('mouseleave', () => {
-            lSky.style.transform = 'translateZ(-300px) scale(2) translate(0, 0)';
-            lDragon.style.transform = 'translateZ(-200px) scale(1.5) translate(0, 0)';
-            lMts.style.transform = 'translateZ(-100px) scale(1.3) translate(0, 0)';
-            lFort.style.transform = 'translateZ(-50px) scale(1.1) translate(0, 0)';
-            lCat.style.transform = 'translateZ(20px) translate(0, 0)';
-        });
+            // Cálculo trigonométrico básico para avanzar en la dirección que mira la cámara
+            let rad = (rotationY * Math.PI) / 180;
 
-        // --- LÓGICA DE CAPÍTULOS DE LA HISTORIA ---
-        const storyData = {
-            2: {
-                title: "El Acertijo del Hávamál",
-                text: "La criatura alada exhala una ráfaga que ilumina los riscos lejanos. Ante el umbral de piedra del castillo, el felino detecta una antigua inscripción que bloquea el paso. No hay que luchar con las garras cuando las palabras correctas pueden abrir cualquier portal.",
-                loreTitle: "Consejo del Hávamál",
-                loreText: '"No hay mejor equipaje para el viajero que la cordura y el buen juicio; es más valioso que las riquezas en tierras extrañas y salva al hombre en la encrucijada."',
-                btn1: "Pronunciar el canto rúnico",
-                btn2: "Avanzar con sigilo en las sombras",
-                next1: 3,
-                next2: 3
-            },
-            3: {
-                title: "El Descanso en las Tierras Altas",
-                text: "El portal cede con un eco grave de piedra. Dentro, los manuscritos antiguos descansan bajo el calor de las antorchas. El dragón se asienta en la cumbre como un guardián eterno, mientras el gato se acomoda entre estanterías de libros, demostrando que quienes buscan conocimiento siempre conquistan su propio espacio.",
-                loreTitle: "Nota Histórica",
-                loreText: "Las crónicas antiguas relatan que las mentes dedicadas al estudio y a los libros eran comparadas con los constructores de reinos. Aquellos que transitan la distancia con paciencia siempre hallan el fuego y la claridad al final del viaje.",
-                btn1: "Iniciar una nueva crónica",
-                btn2: "Guardar el Relato",
-                next1: 1,
-                next2: null
+            if (key === 'w') {
+                posX -= speed * Math.sin(rad);
+                posZ += speed * Math.cos(rad);
+                updateLore(1);
             }
-        };
-
-        function nextStep(step, direction) {
-            const card = document.getElementById('game-card');
-            
-            card.style.animation = 'none';
-            card.offsetHeight; 
-            card.style.animation = 'fadeInEffect 0.7s ease-in-out forwards';
-
-            if (step === 1) {
-                document.getElementById('title').innerText = "La Fortaleza de J things";
-                document.getElementById('text').innerText = "Las siluetas de piedra de una antigua fortaleza recortan el horizonte del septentrión. Arriba, entre los pliegues de la bruma, las alas de una criatura ancestral baten el aire frío. Abajo, desafiando el viento, un sigiloso felino de los bosques orienta sus pasos hacia el torreón.";
-                document.getElementById('lore').innerHTML = `<span>Mitos de las Eddas</span>"En el imaginario medieval, los drakkers o barcos dragón no solo emulaban a las grandes bestias de las leyendas para infundir temor, sino que llevaban figuras estilizadas para ahuyentar a los espíritus de la costa."`;
-                document.getElementById('choices').innerHTML = `
-                    <button class="choice-btn" onclick="nextStep(2, 'left')">Rodear los muros del torreón</button>
-                    <button class="choice-btn" onclick="nextStep(2, 'right')">Observar el vuelo de la bestia</button>
-                `;
-                return;
+            if (key === 's') {
+                posX += speed * Math.sin(rad);
+                posZ -= speed * Math.cos(rad);
+                updateLore(2);
+            }
+            if (key === 'a') {
+                rotationY -= rotSpeed;
+                mount.style.transform = "rotateY(-15deg) rotateZ(-5deg)"; // Inclinación estética de vuelo al girar
+            }
+            if (key === 'd') {
+                rotationY += rotSpeed;
+                mount.style.transform = "rotateY(15deg) rotateZ(5deg)";
             }
 
-            const data = storyData[step];
-            if (!data) return;
+            render3DWorld();
+        });
 
-            document.getElementById('title').innerText = data.title;
-            document.getElementById('text').innerText = data.text;
-            document.getElementById('lore').innerHTML = `<span>${data.loreTitle}</span>"${data.loreText}"`;
+        // Restablecer inclinación del dragón cuando se suelta la tecla de giro
+        window.addEventListener('keyup', () => {
+            mount.style.transform = "rotateY(0deg) rotateZ(0deg)";
+        });
 
-            if (data.next2 === null) {
-                document.getElementById('choices').innerHTML = `
-                    <button class="choice-btn" onclick="nextStep(1, 'left')">${data.btn1}</button>
-                    <button class="choice-btn" onclick="window.close(); alert('Crónica resguardada bajo el ala del dragón.')">${data.btn2}</button>
-                `;
-            } else {
-                document.getElementById('choices').innerHTML = `
-                    <button class="choice-btn" onclick="nextStep(${data.next1}, 'left')">${data.btn1}</button>
-                    <button class="choice-btn" onclick="nextStep(${data.next2}, 'right')">${data.btn2}</button>
-                `;
+        // Control con el CLIC del Mouse para ganar altura
+        window.addEventListener('mousedown', () => {
+            posY += 30; // Desplaza el escenario hacia abajo para simular que subes
+            render3DWorld();
+            updateLore(3);
+        });
+
+        // Actualiza la matriz de transformación CSS 3D
+        function render3DWorld() {
+            scene.style.transform = `translate3d(${posX}px, ${posY}px, ${posZ}px) rotateY(${rotationY}deg)`;
+        }
+
+        // --- SISTEMA NARRATIVO EVOLUTIVO SEGÚN EL VUELO ---
+        function updateLore(action) {
+            const title = document.getElementById('hud-title');
+            const desc = document.getElementById('hud-desc');
+            const lore = document.getElementById('hud-lore');
+
+            if(action === 1) {
+                title.innerText = "Avanzando al Septentrión";
+                desc.innerText = "Te adentras en el espacio profundo de las tierras de piedra. Las torres se vuelven más grandes y nítidas al aproximarte a ellas.";
+                lore.innerText = '"Un viaje largo revela el temple de quien sostiene las riendas." — Sabiduría del Hávamál.';
+            } else if(action === 2) {
+                title.innerText = "Maniobra de Retorno";
+                desc.innerText = "Modificas el rumbo, ganando perspectiva del terreno fortificado que dejas atrás. El viento ruge en las alas del dragón.";
+                lore.innerText = '"Saber retroceder a tiempo es parte de la estrategia del sabio."';
+            } else if(action === 3) {
+                title.innerText = "Ascenso al Trono del Viento";
+                desc.innerText = "Con un batir potente, te elevas por encima de los picos. El frío es más agudo aquí arriba, pero la claridad visual es absoluta.";
+                lore.innerText = '"Quien se eleva lo suficiente ve los problemas del mundo como simples rocas en el suelo." — Crónicas del Norte.';
             }
         }
     </script>
