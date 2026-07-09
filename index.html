@@ -3,281 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valhalla Engine Simulator - 3D Node Project</title>
+    <title>Valhalla Engine - WebGL 3D Prototype</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:wght@400;700&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-engine: #0f111a;
-            --bg-viewport: #05070c;
-            --godot-blue: #478cbf;
+            --bg-dark: #05070c;
             --gold: #d4af37;
-            --text: #e2e8f0;
             --font-title: 'Cinzel', serif;
             --font-body: 'Cormorant Garamond', serif;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body, html { width: 100%; height: 100%; background-color: var(--bg-dark); overflow: hidden; font-family: var(--font-body); color: #e2e8f0; }
 
-        body, html {
+        /* Lienzo donde se renderiza el juego en 3D real */
+        #canvas-3d {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--bg-engine);
-            color: var(--text);
-            font-family: var(--font-body);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            z-index: 1;
         }
 
-        /* --- ENCABEZADO DEL SIMULADOR --- */
-        header {
-            background: #161925;
-            padding: 10px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .engine-title {
-            font-family: var(--font-title);
-            font-size: 1rem;
-            color: var(--godot-blue);
-            letter-spacing: 1px;
-        }
-
-        /* --- CONTENEDOR DEL ESPACIO DE TRABAJO --- */
-        .workspace {
-            display: flex;
-            flex: 1;
-            position: relative;
-        }
-
-        /* Panel Lateral Izquierdo: Árbol de Nodos (Inspirado en Godot) */
-        .nodes-panel {
-            width: 220px;
-            background: #12141f;
-            border-right: 1px solid rgba(255,255,255,0.05);
-            padding: 15px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: #8f95b2;
-        }
-
-        .nodes-panel h3 {
-            color: #cbd5e1;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        .node-item { margin-left: 10px; margin-bottom: 6px; cursor: pointer; }
-        .node-item::before { content: "⎔ "; color: var(--godot-blue); }
-
-        /* --- VIEWPORT 3D (EL JUEGO) --- */
-        #viewport-3d-world {
-            flex: 1;
-            background-color: var(--bg-viewport);
-            perspective: 800px;
-            perspective-origin: 50% 50%;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #scene-3d {
-            width: 100%;
-            height: 100%;
+        /* --- INTERFAZ HUD PROFESIONAL (ESTILO RPG INTERACTIVO) --- */
+        .hud-container {
             position: absolute;
-            transform-style: preserve-3d;
-            transition: transform 0.1s cubic-bezier(0.1, 0.8, 0.1, 1);
-        }
-
-        /* Elementos del mapa */
-        .skybox {
-            position: absolute;
-            width: 4000px;
-            height: 2000px;
-            background: linear-gradient(180deg, #020407, #0b111e, #131a2b);
-            transform: translate3d(-2000px, -1000px, -1200px);
-        }
-
-        .mountain {
-            position: absolute;
-            bottom: -100px;
-            width: 300px;
-            height: 500px;
-            background: linear-gradient(180deg, #1c2333, #080b11);
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            transform-style: preserve-3d;
-        }
-
-        /* Nieve cayendo (Efecto de partículas) */
-        .snow-particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.6;
-            animation: fall 6s linear infinite;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(-50px) translateX(0); }
-            100% { transform: translateY(800px) translateX(50px); }
-        }
-
-        /* --- AVATAR DEL JUGADOR (FIJO EN PANTALLA) --- */
-        #player-mount {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 5rem;
-            z-index: 100;
-            filter: drop-shadow(0 15px 20px rgba(0,0,0,0.7));
-            animation: float 3s ease-in-out infinite;
-        }
-
-        #player-mount::before {
-            content: "🐱";
-            font-size: 2.2rem;
-            position: absolute;
-            top: -20px;
-            left: 40px;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(-50%, -50%) translateY(0) rotate(0deg); }
-            50% { transform: translate(-50%, -50%) translateY(-10px) rotate(-1deg); }
-        }
-
-        /* --- INTERFAZ HUD NARRATIVA --- */
-        .hud-overlay {
-            position: absolute;
-            bottom: 25px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            width: 85%;
-            max-width: 620px;
-            background: rgba(18, 20, 31, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(71, 140, 191, 0.3);
+            width: 90%;
+            max-width: 650px;
+            background: rgba(10, 14, 22, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 175, 55, 0.25);
             border-radius: 6px;
-            padding: 1.2rem;
-            z-index: 200;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            padding: 1.5rem;
+            z-index: 10;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
         .hud-title {
             font-family: var(--font-title);
             color: var(--gold);
-            font-size: 1.2rem;
-            margin-bottom: 0.4rem;
+            font-size: 1.25rem;
+            letter-spacing: 2px;
             text-align: center;
+            margin-bottom: 0.5rem;
         }
 
         .hud-text {
-            font-size: 1.1rem;
-            color: #cbd5e1;
+            font-size: 1.15rem;
             text-align: justify;
+            color: #cbd5e1;
+            line-height: 1.5;
         }
 
-        .controls-hint {
+        /* Consola de estado del motor en la esquina */
+        .debug-panel {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0,0,0,0.5);
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            top: 20px;
+            left: 20px;
+            background: rgba(13, 17, 23, 0.7);
+            border-left: 3px solid #478cbf;
+            padding: 12px 16px;
             font-family: monospace;
-            border-right: 2px solid var(--godot-blue);
-            z-index: 200;
+            font-size: 0.8rem;
+            color: #8f95b2;
+            z-index: 10;
         }
+
+        .debug-panel span { color: #58a6ff; }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <header>
-        <div class="engine-title">ValhallaEngine v4.0 - Sandbox_Project</div>
-        <div style="font-size: 0.8rem; opacity: 0.6;">Build: Successful</div>
-    </header>
+    <div class="debug-panel">
+        ENGINE: <span>WebGL_Three.js_r128</span><br>
+        RENDER_MODE: <span>Realtime_Mesh_3D</span><br>
+        CONTROLS: <span>WASD [Active]</span><br>
+        PARTICLES: <span>Snow_System_ON</span>
+    </div>
 
-    <div class="workspace">
-        <div class="nodes-panel">
-            <h3>Nodos del Mundo</h3>
-            <div class="node-item">Mundo3D</div>
-            <div class="node-item" style="margin-left: 20px;">Skybox_Nordic</div>
-            <div class="node-item" style="margin-left: 20px;">Montañas_Nevadas</div>
-            <div class="node-item" style="margin-left: 20px;">Sistema_Partículas_Nieve</div>
-            <div class="node-item" style="margin-left: 20px;">Player_Dragon_Mount</div>
-            <div class="node-item" style="margin-left: 40px;">Skogkatt_Character</div>
-        </div>
+    <canvas id="canvas-3d"></canvas>
 
-        <div id="viewport-3d-world">
-            <div class="controls-hint">
-                [WASD] Mover Cámara<br>
-                [CLIC] Elevar Vuelo
-            </div>
-
-            <div id="scene-3d">
-                <div class="skybox"></div>
-                
-                <div class="mountain" style="transform: translate3d(-400px, 150px, -800px) scale(1.5);"></div>
-                <div class="mountain" style="transform: translate3d(300px, 200px, -1000px) scale(1.8);"></div>
-                <div class="mountain" style="transform: translate3d(-100px, 250px, -600px) scale(1.1);"></div>
-                <div class="mountain" style="transform: translate3d(600px, 180px, -700px) scale(1.3);"></div>
-            </div>
-
-            <div id="player-mount">🐉</div>
-
-            <div class="hud-overlay">
-                <h2 class="hud-title" id="hud-title">Compilación: Entorno Escandinavo</h2>
-                <p class="hud-text" id="hud-desc">
-                    El sistema de partículas simula la caída de nieve sobre las coordenadas de las tierras altas. Usa los controles para navegar el entorno a través de la perspectiva tridimensional del nodo principal.
-                </p>
-            </div>
-        </div>
+    <div class="hud-container">
+        <h2 class="hud-title">Vuelo en el Septentrión</h2>
+        <p class="hud-text">
+            Explorando el espacio poligonal a través de un motor WebGL en tiempo real. La malla del terreno genera valles y elevaciones matemáticas mientras el sistema de partículas calcula la caída de nieve en un espacio tridimensional real.
+        </p>
     </div>
 
     <script>
-        // --- MOTOR DE MOVIMIENTO Y PERSPECTIVA ---
-        let posX = 0, posY = 0, posZ = 0, rotY = 0;
-        const scene = document.getElementById('scene-3d');
+        // --- CONFIGURACIÓN DEL MOTOR WEBGL REAL ---
+        let scene, camera, renderer, terrain, player, snowParticles;
+        let keys = { w: false, a: false, s: false, d: false };
+        let moveSpeed = 0.8;
+        let rotationSpeed = 0.03;
 
-        // Generar partículas de nieve dinámicamente en el espacio
-        const viewport = document.getElementById('viewport-3d-world');
-        for (let i = 0; i < 40; i++) {
-            let snow = document.createElement('div');
-            snow.className = 'snow-particle';
-            snow.style.left = Math.random() * 100 + '%';
-            snow.style.top = Math.random() * -20 + '%';
-            snow.style.animationDelay = Math.random() * 5 + 's';
-            viewport.appendChild(snow);
+        function init() {
+            const canvas = document.getElementById('canvas-3d');
+            
+            // 1. Crear la Escena y la Cámara 3D
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x05070c);
+            scene.fog = new THREE.FogExp2(0x05070c, 0.015); // Niebla de profundidad real
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 8, 25); // Posicionada detrás y arriba del jugador
+
+            // 2. Renderizador WebGL de alto rendimiento
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // 3. Iluminación de la Escena
+            const ambientLight = new THREE.AmbientLight(0x1a233a, 1.5); // Luz de entorno nocturna
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xd4af37, 1.2); // Luz dorada direccional
+            directionalLight.position.set(5, 20, 10);
+            scene.add(directionalLight);
+
+            // 4. Generación del Terreno 3D Real (Malla con relieve)
+            const terrainGeo = new THREE.PlaneGeometry(500, 500, 60, 60);
+            terrainGeo.rotateX(-Math.PI / 2); // Acostar el plano
+
+            // Modificar los vértices matemáticamente para simular montañas y valles reales
+            const pos = terrainGeo.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+                let x = pos.getX(i);
+                let z = pos.getZ(i);
+                // Usamos ondas senoidales para crear relieve poligonal real
+                let y = Math.sin(x * 0.05) * Math.cos(z * 0.05) * 6;
+                pos.setY(i, y);
+            }
+            terrainGeo.computeVertexNormals();
+
+            // Material sombreado que reacciona a la luz real
+            const terrainMat = new THREE.MeshStandardMaterial({
+                color: 0x0f1423,
+                wireframe: true, // Estilo rejilla de desarrollo de videojuegos
+                roughness: 0.8
+            });
+            terrain = new THREE.Mesh(terrainGeo, terrainMat);
+            scene.add(terrain);
+
+            // 5. El Objeto del Jugador (Geometría estilizada de un drakker/montura voladora)
+            const playerGeo = new THREE.ConeGeometry(1.5, 4, 4);
+            playerGeo.rotateX(Math.PI / 2); // Orientar el cono hacia adelante
+            const playerMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.8 });
+            player = new THREE.Mesh(playerGeo, playerMat);
+            player.position.set(0, 6, 0);
+            scene.add(player);
+
+            // 6. Sistema de Partículas de Nieve Tridimensional Real
+            const snowGeo = new THREE.BufferGeometry();
+            const snowCount = 400;
+            const snowPositions = new Float32Array(snowCount * 3);
+
+            for(let i=0; i < snowCount * 3; i+=3) {
+                snowPositions[i] = (Math.random() - 0.5) * 200;
+                snowPositions[i+1] = Math.random() * 50;
+                snowPositions[i+2] = (Math.random() - 0.5) * 200;
+            }
+
+            snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
+            const snowMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.3, transparent: true, opacity: 0.7 });
+            snowParticles = new THREE.Points(snowGeo, snowMat);
+            scene.add(snowParticles);
+
+            // Eventos del Teclado
+            window.addEventListener('keydown', (e) => handleKeys(e, true));
+            window.addEventListener('keyup', (e) => handleKeys(e, false));
+            window.addEventListener('resize', onWindowResize);
+
+            animate();
         }
 
-        window.addEventListener('keydown', (e) => {
+        function handleKeys(e, isPressed) {
             const key = e.key.toLowerCase();
-            const speed = 20;
-            const rotSpeed = 3;
-            let rad = (rotY * Math.PI) / 180;
+            if (key in keys) keys[key] = isPressed;
+        }
 
-            if (key === 'w') { posX -= speed * Math.sin(rad); posZ += speed * Math.cos(rad); }
-            if (key === 's') { posX += speed * Math.sin(rad); posZ -= speed * Math.cos(rad); }
-            if (key === 'a') { rotY -= rotSpeed; }
-            if (key === 'd') { rotY += rotSpeed; }
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
 
-            scene.style.transform = `translate3d(${posX}px, ${posY}px, ${posZ}px) rotateY(${rotY}deg)`;
-        });
+        // --- BUCLE DE ANIMACIÓN Y FÍSICAS (60 FPS REALES) ---
+        function animate() {
+            requestAnimationFrame(animate);
 
-        window.addEventListener('mousedown', () => {
-            posY += 25; // Simular ganancia de altitud
-            scene.style.transform = `translate3d(${posX}px, ${posY}px, ${posZ}px) rotateY(${rotY}deg)`;
-        });
+            // Movimiento basado en la rotación actual del personaje
+            if (keys.w) {
+                player.position.x -= Math.sin(player.rotation.y) * moveSpeed;
+                player.position.z -= Math.cos(player.rotation.y) * moveSpeed;
+            }
+            if (keys.s) {
+                player.position.x += Math.sin(player.rotation.y) * moveSpeed;
+                player.position.z += Math.cos(player.rotation.y) * moveSpeed;
+            }
+
+            // Rotación e inclinación lateral (Bank/Roll) al girar
+            if (keys.a) {
+                player.rotation.y += rotationSpeed;
+                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, 0.4, 0.1); // Inclinación real
+            } else if (keys.d) {
+                player.rotation.y -= rotationSpeed;
+                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, -0.4, 0.1);
+            } else {
+                player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, 0, 0.1); // Regresar al centro
+            }
+
+            // Hacer que la cámara siga al jugador suavemente (Cámara en tercera persona)
+            camera.position.x = player.position.x + Math.sin(player.rotation.y) * 20;
+            camera.position.z = player.position.z + Math.cos(player.rotation.y) * 20;
+            camera.position.y = THREE.MathUtils.lerp(camera.position.y, player.position.y + 4, 0.05);
+            camera.lookAt(player.position);
+
+            // Animación física de la nieve cayendo en el espacio
+            const positions = snowParticles.geometry.attributes.position.array;
+            for(let i = 1; i < positions.length; i += 3) {
+                positions[i] -= 0.1; // Velocidad de caída
+                if (positions[i] < 0) positions[i] = 40; // Reiniciar arriba cuando toca el suelo
+            }
+            snowParticles.geometry.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+
+        // Ejecutar el motor al cargar la página
+        window.onload = init;
     </script>
 </body>
 </html>
