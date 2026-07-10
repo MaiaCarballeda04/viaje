@@ -3,88 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viking & Cats: Peaceful Exploration</title>
+    <title>Viking Pipeline Hub</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
     
     <style>
+        :root {
+            --bg-dark: #060913;
+            --gold: #f59e0b;
+            --font-title: 'Cinzel', serif;
+            --font-body: 'Cormorant Garamond', serif;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body, html { width: 100%; height: 100%; background-color: #050811; overflow: hidden; font-family: sans-serif; color: #e2e8f0; }
+        body, html { width: 100%; height: 100%; background-color: var(--bg-dark); font-family: var(--font-body); color: #e2e8f0; overflow: hidden; }
+
+        /* Contenedor principal dividido */
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* MITAD SUPERIOR: El simulador 3D */
+        .simulation-container {
+            position: relative;
+            width: 100%;
+            height: 55%;
+            border-bottom: 3px solid var(--gold);
+            background: #000;
+        }
 
         #canvas-3d {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
+            display: block;
             cursor: grab;
         }
         #canvas-3d:active { cursor: grabbing; }
 
-        /* HUD simple de interacción */
-        .hud-interaction {
+        .hint-overlay {
             position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(10, 15, 30, 0.85);
-            backdrop-filter: blur(10px);
-            border: 2px solid #f59e0b;
-            border-radius: 12px;
-            padding: 20px 40px;
-            z-index: 10;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            min-width: 320px;
-        }
-
-        .hud-title {
-            font-family: 'Cinzel', serif;
-            color: #f59e0b;
-            font-size: 1.2rem;
-            margin-bottom: 5px;
-            letter-spacing: 1px;
-        }
-
-        .hud-status {
-            font-family: 'Almendra', serif;
-            font-size: 1.25rem;
+            top: 15px;
+            left: 15px;
+            background: rgba(5, 8, 17, 0.85);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            border-left: 3px solid var(--gold);
+            z-index: 5;
             color: #cbd5e1;
         }
+        .hint-overlay span { color: var(--gold); font-weight: bold; }
 
-        .controls-box {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(5, 8, 17, 0.7);
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 0.85rem;
-            border-left: 3px solid #f59e0b;
-            z-index: 10;
-            color: #94a3b8;
+        /* MITAD INFERIOR: El panel educativo estructurado */
+        .pipeline-panel {
+            width: 100%;
+            height: 45%;
+            background: #090d16;
+            padding: 1.5rem 2rem;
+            overflow-y: auto;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
         }
-        .controls-box span { color: #f59e0b; font-weight: bold; }
+
+        .pipeline-intro {
+            font-size: 1.15rem;
+            line-height: 1.5;
+            margin-bottom: 1.2rem;
+            color: #cbd5e1;
+            text-align: justify;
+        }
+
+        .pipeline-intro strong {
+            color: var(--gold);
+            font-family: var(--font-title);
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .pipeline-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .pipeline-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(245, 158, 11, 0.1);
+            padding: 1rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .pipeline-item.active-interaction {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.04);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+        }
+
+        .item-title {
+            font-family: var(--font-title);
+            color: var(--gold);
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .item-desc {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        .pipeline-footer {
+            border-top: 1px solid rgba(245, 158, 11, 0.15);
+            padding-top: 0.8rem;
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        .pipeline-footer a {
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .pipeline-footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div class="controls-box">
-        <span>[WASD]</span> Caminar por la nieve<br>
-        <span>[MOUSE]</span> Girar cámara 360°<br>
-        <span>[E]</span> Mimar al gatito (cuando estés cerca)
-    </div>
+    <div class="main-wrapper">
+        
+        <!-- Zona de simulación visual -->
+        <div class="simulation-container">
+            <div class="hint-overlay">
+                <span>[WASD]</span> Caminar por Midgard | <span>[MANTENER E]</span> Mimar al Michi
+            </div>
+            <canvas id="canvas-3d"></canvas>
+        </div>
 
-    <canvas id="canvas-3d"></canvas>
+        <!-- Zona de documentación/Pipeline solicitado -->
+        <div class="pipeline-panel">
+            <p class="pipeline-intro">
+                El programa principal para el diseño estructural y las mallas tridimensionales del entorno es <strong>Autodesk Maya</strong>. Para la orquestación lógica de eventos de proximidad en tiempo real, se utilizó la biblioteca matemática <strong>Three.js (WebGL)</strong>. Todo esto se procesa dinámicamente y cobra vida dentro de tu <strong>Navegador Web</strong>.
+            </p>
 
-    <div class="hud-interaction">
-        <h2 class="hud-title" id="action-title">Exploración Libre</h2>
-        <p class="hud-status" id="action-status">Camina por el valle rúnico en busca de amigos peludos...</p>
+            <ul class="pipeline-list">
+                <li class="pipeline-item" id="item-maya">
+                    <h3 class="item-title">Autodesk Maya:</h3>
+                    <p class="item-desc">Es el entorno donde se esculpen los polígonos del guerrero nórdico, los cuernos de su casco y las extremidades del felino. Funciona como la herrería digital del juego.</p>
+                </li>
+                <li class="pipeline-item" id="item-three">
+                    <h3 class="item-title">Three.js / WebGL:</h3>
+                    <p class="item-desc" id="desc-three">Es el motor que calcula la distancia euclidiana entre los personajes. Cuando presionas la tecla de interacción, este módulo transforma los datos en mimos en tiempo real.</p>
+                </li>
+                <li class="pipeline-item" id="item-browser">
+                    <h3 class="item-title">Navegador Web:</h3>
+                    <p class="item-desc">Es la plataforma final que compila y dibuja la tormenta de nieve y el relieve a 60 FPS, permitiendo que experimentes la interactividad sin intermediarios.</p>
+                </li>
+            </ul>
+
+            <div class="pipeline-footer">
+                Si quieres saber más sobre cómo se estructuran estos entornos gráficos interactivos, puedes visitar la <a href="https://threejs.org" target="_blank">documentación oficial de Three.js</a>.
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -94,246 +188,195 @@
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
         let cameraAngleX = 0; 
-        let cameraAngleY = 0.3; 
-        let cameraDistance = 10; 
+        let cameraAngleY = 0.25; 
+        let cameraDistance = 8; 
 
         function init() {
+            const container = document.querySelector('.simulation-container');
             const canvas = document.getElementById('canvas-3d');
 
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x060913);
-            scene.fog = new THREE.FogExp2(0x060913, 0.02);
+            scene.fog = new THREE.FogExp2(0x060913, 0.025);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
 
-            // Luces para que la armadura y todo se vea nítido
-            const ambientLight = new THREE.AmbientLight(0x2e3b4e, 2.5);
+            // Luces cinematográficas
+            const ambientLight = new THREE.AmbientLight(0x223147, 2.5);
             scene.add(ambientLight);
 
-            const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
-            sunLight.position.set(10, 30, 20);
-            scene.add(sunLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.8);
+            directionalLight.position.set(5, 20, 10);
+            scene.add(directionalLight);
 
-            // Una hermosa e inmensa Luna de fondo
-            const moonGeo = new THREE.SphereGeometry(8, 32, 32);
-            const moonMat = new THREE.MeshBasicMaterial({ color: 0xfffae6 });
-            const moon = new THREE.Mesh(moonGeo, moonMat);
-            moon.position.set(0, 25, -80);
+            // Luna llena
+            const moon = new THREE.Mesh(
+                new THREE.SphereGeometry(5, 32, 32),
+                new THREE.MeshBasicMaterial({ color: 0xfffae6 })
+            );
+            moon.position.set(0, 15, -60);
             scene.add(moon);
 
-            // Suelo plano cubierto de nieve con una sutil cuadrícula nórdica
-            const floorGeo = new THREE.PlaneGeometry(200, 200);
+            // Suelo nevado con rejilla
+            const floorGeo = new THREE.PlaneGeometry(150, 150);
             floorGeo.rotateX(-Math.PI / 2);
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
-            const floor = new THREE.Mesh(floorGeo, floorMat);
+            const floor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 }));
             scene.add(floor);
 
-            const grid = new THREE.GridHelper(200, 50, 0x1f2937, 0x1f2937);
+            const grid = new THREE.GridHelper(150, 40, 0x1e293b, 0x1e293b);
             grid.position.y = 0.01;
             scene.add(grid);
 
-            // --- DISEÑO DEL VIKINGO (Low-poly con armadura y casco) ---
+            // --- JUGADOR: VIKINGO ---
             player = new THREE.Group();
+            
+            // Cuerpo / Armadura
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5 }));
+            body.position.y = 0.6;
+            player.add(body);
 
-            // Cuerpo / Armadura Gris de Placas
-            const armorMesh = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.5, 0.6, 1.4, 8),
-                new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.4, metalness: 0.6 })
-            );
-            armorMesh.position.y = 0.7;
-            player.add(armorMesh);
+            // Cabeza
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffe0bd }));
+            head.position.y = 1.35;
+            player.add(head);
 
-            // Cabeza (Piel)
-            const headMesh = new THREE.Mesh(
-                new THREE.SphereGeometry(0.3, 8, 8),
-                new THREE.MeshStandardMaterial({ color: 0xffdbac })
-            );
-            headMesh.position.y = 1.6;
-            player.add(headMesh);
+            // Barba Nórdica
+            const beard = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, 0.15), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
+            beard.position.set(0, 1.2, -0.15);
+            player.add(beard);
 
-            // Capa / Barba pelirroja
-            const beardMesh = new THREE.Mesh(
-                new THREE.BoxGeometry(0.35, 0.4, 0.2),
-                new THREE.MeshStandardMaterial({ color: 0xd97706 }) // Naranja/Marrón vikingo
-            );
-            beardMesh.position.set(0, 1.4, -0.2); // Al frente de la cara
-            player.add(beardMesh);
+            // Casco y Cuernos
+            const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.27, 8, 8, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.7 }));
+            helmet.position.y = 1.45;
+            player.add(helmet);
 
-            // Casco de Hierro (Hemisferio)
-            const helmetMesh = new THREE.Mesh(
-                new THREE.SphereGeometry(0.33, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-                new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.8 })
-            );
-            helmetMesh.position.y = 1.75;
-            player.add(helmetMesh);
-
-            // Cuerno Izquierdo del Casco
-            const hornL = new THREE.Mesh(
-                new THREE.ConeGeometry(0.08, 0.3, 5),
-                new THREE.MeshStandardMaterial({ color: 0xf8fafc })
-            );
-            hornL.position.set(-0.3, 1.9, 0);
-            hornL.rotation.z = 0.6;
+            const hornL = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.25, 4), new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
+            hornL.position.set(-0.25, 1.6, 0);
+            hornL.rotation.z = 0.5;
             player.add(hornL);
 
-            // Cuerno Derecho del Casco
             const hornR = hornL.clone();
-            hornR.position.x = 0.3;
-            hornR.rotation.z = -0.6;
+            hornR.position.x = 0.25;
+            hornR.rotation.z = -0.5;
             player.add(hornR);
 
             player.position.set(0, 0, 0);
             scene.add(player);
 
-            // --- DISEÑO DEL GATITO (Michi Naranja) ---
+            // --- MICHIS ---
             cat = new THREE.Group();
-
-            // Cuerpo del michi
-            const catBody = new THREE.Mesh(
-                new THREE.BoxGeometry(0.3, 0.25, 0.5),
-                new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.8 }) // Naranja brillante
-            );
-            catBody.position.y = 0.125;
+            const catBody = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, 0.4), new THREE.MeshStandardMaterial({ color: 0xf97316 }));
+            catBody.position.y = 0.1;
             cat.add(catBody);
 
-            // Cabeza del michi
-            const catHead = new THREE.Mesh(
-                new THREE.BoxGeometry(0.2, 0.2, 0.2),
-                new THREE.MeshStandardMaterial({ color: 0xf97316 })
-            );
-            catHead.position.set(0, 0.3, -0.22);
+            const catHead = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.16, 0.16), new THREE.MeshStandardMaterial({ color: 0xf97316 }));
+            catHead.position.set(0, 0.25, -0.16);
             cat.add(catHead);
 
-            // Orejitas
-            const earL = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.08, 4), new THREE.MeshStandardMaterial({ color: 0xf97316 }));
-            earL.position.set(-0.06, 0.42, -0.22);
-            cat.add(earL);
-            const earR = earL.clone();
-            earR.position.x = 0.06;
-            cat.add(earR);
-
-            // Colita feliz
-            const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3), new THREE.MeshStandardMaterial({ color: 0xf97316 }));
-            tail.position.set(0, 0.3, 0.25);
-            tail.rotation.x = 0.5;
+            const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.25), new THREE.MeshStandardMaterial({ color: 0xf97316 }));
+            tail.position.set(0, 0.25, 0.2);
+            tail.rotation.x = 0.6;
             cat.add(tail);
 
-            // Ubicar al gato un poco adelante del spawn del jugador
-            cat.position.set(0, 0, -6);
+            cat.position.set(0, 0, -4);
             scene.add(cat);
 
-            // Nieve ambiental cayendo
+            // Nieve
             const snowGeo = new THREE.BufferGeometry();
-            const snowCount = 300;
+            const snowCount = 200;
             const snowPositions = new Float32Array(snowCount * 3);
             for(let i=0; i < snowCount * 3; i+=3) {
-                snowPositions[i] = (Math.random() - 0.5) * 100;
-                snowPositions[i+1] = Math.random() * 30;
-                snowPositions[i+2] = (Math.random() - 0.5) * 100;
+                snowPositions[i] = (Math.random() - 0.5) * 60;
+                snowPositions[i+1] = Math.random() * 20;
+                snowPositions[i+2] = (Math.random() - 0.5) * 60;
             }
             snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
-            snowParticles = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15 }));
+            snowParticles = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.12 }));
             scene.add(snowParticles);
 
-            // Eventos de Mouse (Órbita 360°)
-            canvas.addEventListener('mousedown', (e) => { isDragging = true; });
-            canvas.addEventListener('mousemove', (e) => {
+            // Eventos Mouse Drag
+            container.addEventListener('mousedown', (e) => { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; });
+            container.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 let deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
-                cameraAngleX -= deltaMove.x * 0.007;
-                cameraAngleY += deltaMove.y * 0.007;
-                cameraAngleY = Math.max(0.1, Math.min(Math.PI / 2.5, cameraAngleY));
+                cameraAngleX -= deltaMove.x * 0.008;
+                cameraAngleY += deltaMove.y * 0.008;
+                cameraAngleY = Math.max(0.1, Math.min(Math.PI / 2.6, cameraAngleY));
                 previousMousePosition = { x: e.clientX, y: e.clientY };
             });
             window.addEventListener('mouseup', () => { isDragging = false; });
-            canvas.addEventListener('mousedown', (e) => { previousMousePosition = { x: e.clientX, y: e.clientY }; });
 
             // Teclado
-            window.addEventListener('keydown', (e) => { handleKey(e.key, true); });
-            window.addEventListener('keyup', (e) => { handleKey(e.key, false); });
+            window.addEventListener('keydown', (e) => { let k = e.key.toLowerCase(); if(k in keys) keys[k] = true; });
+            window.addEventListener('keyup', (e) => { let k = e.key.toLowerCase(); if(k in keys) keys[k] = false; });
             window.addEventListener('resize', onWindowResize);
 
             animate();
         }
 
-        function handleKey(key, isPressed) {
-            let k = key.toLowerCase();
-            if (k in keys) keys[k] = isPressed;
-        }
-
         function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            const container = document.querySelector('.simulation-container');
+            camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(container.clientWidth, container.clientHeight);
         }
 
         function animate() {
             requestAnimationFrame(animate);
-            let speed = 0.12;
+            let speed = 0.08;
 
-            // Movimiento relativo a la orientación de la cámara
+            // Movimiento acoplado a la cámara
             if (keys.w) {
                 player.position.x -= Math.sin(cameraAngleX) * speed;
                 player.position.z -= Math.cos(cameraAngleX) * speed;
-                player.rotation.y = cameraAngleX; // El vikingo mira hacia donde camina
+                player.rotation.y = cameraAngleX;
             }
             if (keys.s) {
                 player.position.x += Math.sin(cameraAngleX) * speed;
                 player.position.z += Math.cos(cameraAngleX) * speed;
                 player.rotation.y = cameraAngleX + Math.PI;
             }
-            if (keys.a) {
-                player.position.x -= Math.cos(cameraAngleX) * speed;
-                player.position.z += Math.sin(cameraAngleX) * speed;
-                player.rotation.y = cameraAngleX + Math.PI/2;
-            }
-            if (keys.d) {
-                player.position.x += Math.cos(cameraAngleX) * speed;
-                player.position.z -= Math.sin(cameraAngleX) * speed;
-                player.rotation.y = cameraAngleX - Math.PI/2;
-            }
 
-            // --- LÓGICA DE PROXIMIDAD Y MIMOS ---
+            // Detección de proximidad para activar la UI reactiva
             let distance = player.position.distanceTo(cat.position);
-            const titleElement = document.getElementById('action-title');
-            const statusElement = document.getElementById('action-status');
+            
+            const itemThree = document.getElementById('item-three');
+            const descThree = document.getElementById('desc-three');
 
-            if (distance < 1.8) {
-                // El jugador está lo suficientemente cerca del michi
+            if (distance < 1.5) {
                 if (keys.e) {
-                    titleElement.innerText = "❤️ ¡MIMANDO AL GATITO! ❤️";
-                    statusElement.innerText = "El temible guerrero norteño baja la guardia. El michi ronronea feliz: *Prrr... Miau*";
+                    // Animación de mimos activa
+                    player.rotation.x = 0.25; // Vikingo se inclina
+                    cat.rotation.y += 0.08;    // Gato festeja girando
                     
-                    // Animación simple: el vikingo se inclina un poquito hacia adelante para acariciar
-                    player.rotation.x = 0.2;
-                    cat.rotation.y += 0.05; // El gatito da vueltas de alegría
+                    itemThree.classList.add('active-interaction');
+                    descThree.innerHTML = "<strong>[ESTADO: MIMANDO]</strong> El sistema WebGL detectó la colisión. Transmitiendo impulsos lógicos de afecto nórdico: <em>El michi ronronea a máxima intensidad.</em>";
                 } else {
-                    titleElement.innerText = "¡Encontraste un Michi Naranja!";
-                    statusElement.innerText = "Mantén presionada la tecla [E] para llenarlo de mimos.";
                     player.rotation.x = 0;
+                    itemThree.classList.add('active-interaction');
+                    descThree.innerHTML = "<strong>[PROXIMIDAD DETECTADA]</strong> Estás junto al michi. Presiona y mantén <strong>[E]</strong> para gatillar el evento de animación interactiva.";
                 }
             } else {
-                // Lejos del gato, todo normal
-                titleElement.innerText = "Exploración Libre";
-                statusElement.innerText = "Camina por el valle rúnico en busca de amigos peludos...";
                 player.rotation.x = 0;
+                itemThree.classList.remove('active-interaction');
+                descThree.innerText = "Es el motor que calcula la distancia euclidiana entre los personajes. Cuando presionas la tecla de interacción, este módulo transforma los datos en mimos en tiempo real.";
             }
 
-            // Cámara en tercera persona siguiendo al Vikingo
+            // Órbita de cámara fija en tercera persona
             camera.position.x = player.position.x + cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
             camera.position.z = player.position.z + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
             camera.position.y = player.position.y + cameraDistance * Math.sin(cameraAngleY);
-            camera.lookAt(player.position.x, player.position.y + 1.0, player.position.z);
+            camera.lookAt(player.position.x, player.position.y + 0.8, player.position.z);
 
-            // Movimiento infinito de la nieve
+            // Nieve cayendo
             const positions = snowParticles.geometry.attributes.position.array;
             for(let i = 1; i < positions.length; i += 3) {
-                positions[i] -= 0.05;
-                if (positions[i] < 0) positions[i] = 30;
+                positions[i] -= 0.04;
+                if (positions[i] < 0) positions[i] = 20;
             }
             snowParticles.geometry.attributes.position.needsUpdate = true;
 
