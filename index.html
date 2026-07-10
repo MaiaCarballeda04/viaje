@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saga of the Skogkatt: WebGL 360 Chronicles</title>
+    <title>Saga of the Skogkatt: 360 Open World Prototype</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-dark: #020408;
-            --gold: #d4af37;
+            --bg-dark: #050811;
+            --gold: #f59e0b;
             --font-title: 'Cinzel', serif;
             --font-medieval: 'Almendra', serif;
             --font-body: 'Cormorant Garamond', serif;
@@ -31,7 +31,7 @@
         }
         #canvas-3d:active { cursor: grabbing; }
 
-        /* --- INTERFAZ HUD LITERARIA MEJORADA --- */
+        /* HUD Narrativo */
         .hud-container {
             position: absolute;
             bottom: 30px;
@@ -39,14 +39,13 @@
             transform: translateX(-50%);
             width: 90%;
             max-width: 680px;
-            background: rgba(7, 10, 15, 0.9);
+            background: rgba(5, 8, 17, 0.92);
             backdrop-filter: blur(15px);
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            border: 2px solid var(--gold);
             border-radius: 8px;
             padding: 1.5rem;
             z-index: 10;
             box-shadow: 0 25px 60px rgba(0,0,0,0.9);
-            transition: all 0.5s ease;
         }
 
         .hud-title {
@@ -69,209 +68,199 @@
         .hud-lore {
             font-family: var(--font-medieval);
             font-style: italic;
-            color: #a0aec0;
+            color: #94a3b8;
             font-size: 1.05rem;
-            border-top: 1px solid rgba(212, 175, 55, 0.15);
+            border-top: 1px solid rgba(245, 158, 11, 0.2);
             padding-top: 0.6rem;
             text-align: center;
         }
 
-        .hud-lore span {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--gold);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 2px;
-        }
-
-        .controls-hint {
+        /* Panel de Objetivos de Navegación */
+        .objective-panel {
             position: absolute;
             top: 20px;
-            right: 20px;
-            background: rgba(10, 14, 22, 0.7);
-            padding: 10px 14px;
-            border-radius: 4px;
-            font-size: 0.8rem;
+            left: 20px;
+            background: rgba(5, 8, 17, 0.85);
+            border: 1px solid var(--gold);
+            padding: 12px 18px;
             font-family: monospace;
-            border-right: 2px solid var(--gold);
+            font-size: 0.85rem;
+            color: #e2e8f0;
             z-index: 10;
-            line-height: 1.4;
-            color: #a0aec0;
+            border-radius: 4px;
         }
-        .controls-hint span { color: var(--gold); }
+
+        .objective-panel span { color: #10b981; font-weight: bold; }
+        .distance-display { color: #ef4444; font-weight: bold; font-size: 1.1rem; }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div class="controls-hint">
-        <span>[TECLADO]</span> WASD para Volar<br>
-        <span>[ESPACIO]</span> Ascender al Cielo<br>
-        <span>[MOUSE]</span> Arrastrar para Vista 360°
+    <div class="objective-panel">
+        <strong>MISIÓN ACTIVA:</strong> <span id="nav-objective">Volar hacia el Faro Rúnico</span><br>
+        <strong>DISTANCIA:</strong> <span id="nav-distance" class="distance-display">---</span>
     </div>
 
     <canvas id="canvas-3d"></canvas>
 
-    <div class="hud-container" id="hud-box">
+    <div class="hud-container">
         <h2 class="hud-title" id="story-title">Capítulo I: El Despertar en Midgard</h2>
         <p class="hud-text" id="story-text">
-            Bajo un firmamento cargado de augurios, un felino de los bosques sagrados despierta. No arrastra el carro de Freyja esta noche; en su lugar, se aferra a las escamas doradas de una bestia alada ancestral. Las montañas rúnicas tiemblan bajo la nieve. Iniciá el vuelo para cruzar el horizonte.
+            El drakker alado y su tripulante contemplan la inmensidad helada. Al frente, un Faro Sagrado de luz dorada corta la tormenta de nieve. Guía la montura usando las teclas WASD hacia el destello luminoso para avanzar en tu travesía.
         </p>
         <div class="hud-lore" id="story-lore">
-            <span>Mitos de las Eddas</span>
-            "Se dice que los drakkers vikingos cobraban vida cuando el viento del norte soplaba con suficiente fuerza, guiados por los ojos de los guardianes silenciosos de la noche."
+            "Para cruzar la bruma, el navegante necesita un punto fijo en el firmamento."
         </div>
     </div>
 
     <script>
-        let scene, camera, renderer, terrain, player, snowParticles;
+        let scene, camera, renderer, terrain, player, snowParticles, moon, beacon;
         let keys = { w: false, a: false, s: false, d: false, ' ': false };
         
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
         let cameraAngleX = 0; 
-        let cameraAngleY = 0.25; 
-        let cameraDistance = 20; 
+        let cameraAngleY = 0.2; 
+        let cameraDistance = 18; 
 
-        // Base de datos de la historia según las acciones del jugador
-        const sagaChronicles = {
-            intro: {
-                title: "Capítulo I: El Despertar en Midgard",
-                text: "Bajo un firmamento cargado de augurios, un felino de los bosques sagrados despierta. No arrastra el carro de Freyja esta noche; en su lugar, se aferra a las escamas doradas de una bestia alada ancestral. Las montañas rúnicas tiemblan bajo la nieve. Iniciá el vuelo para cruzar el horizonte.",
-                source: "Mitos de las Eddas",
-                quote: "Se dice que los drakkers vikingos cobraban vida cuando el viento del norte soplaba con suficiente fuerza."
-            },
-            flying: {
-                title: "Capítulo II: Las Corrientes del Hávamál",
-                text: "El drakker alado bate sus extensiones poligonales cortando el viento helado. Abajo, el relieve de las montañas escandinavas traza el mapa de los antiguos clanes. Volás sin miedo, buscando el umbral de la fortaleza medieval oculta entre la bruma mística.",
-                source: "Hávamál, Estrofa 2",
-                quote: "¡Salud al anfitrión! Un huésped ha entrado, ¿dónde se va a sentar? Muy ansioso está quien en las brasas debe probar su suerte."
-            },
-            climbing: {
-                title: "Capítulo III: El Camino al Valhalla",
-                text: "Ascendiendo con fuerza hacia las estrellas de WebGL. La gravedad pierde su poder mientras te elevás por encima de los picos nevados. El frío de la alta atmósfera purifica las dudas; desde acá arriba, el destino del viajero se vuelve claro y eterno.",
-                source: "Sabiduría de Odín",
-                quote: "No hay mejor equipaje para el viajero que la cordura y el buen juicio; es mejor que las riquezas en tierras extrañas."
-            }
-        };
+        // Coordenadas fijas del objetivo (Faro Rúnico)
+        const targetLocation = new THREE.Vector3(0, 12, -120);
+        let currentChapter = 1;
 
         function init() {
             const canvas = document.getElementById('canvas-3d');
 
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x020408);
-            scene.fog = new THREE.FogExp2(0x020408, 0.015);
+            scene.background = new THREE.Color(0x04060f);
+            scene.fog = new THREE.FogExp2(0x04060f, 0.008);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
             renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
-            // Iluminación cinemática mística (Azul y Oro)
-            const ambientLight = new THREE.AmbientLight(0x0f1526, 2.5);
+            // Iluminación Clara
+            const ambientLight = new THREE.AmbientLight(0x1e293b, 2.0);
             scene.add(ambientLight);
 
-            const auroraLight = new THREE.HemisphereLight(0x00f38d, 0x0b0f19, 0.8); // Reflejo sutil de aurora boreal
-            scene.add(auroraLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
+            directionalLight.position.set(0, 50, 50);
+            scene.add(directionalLight);
 
-            const sunLight = new THREE.DirectionalLight(0xd4af37, 1.8);
-            sunLight.position.set(20, 50, 15);
-            scene.add(sunLight);
+            // 1. LA LUNA GIGANTE
+            const moonGeo = new THREE.SphereGeometry(12, 32, 32);
+            const moonMat = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
+            moon = new THREE.Mesh(moonGeo, moonMat);
+            moon.position.set(0, 45, -200); // Al fondo del escenario
+            scene.add(moon);
 
-            // Terreno Sólido Facetado de Alta Calidad
-            const terrainGeo = new THREE.PlaneGeometry(500, 500, 70, 70);
+            // 2. TERRENO VISIBLE (Montañas con relieve nítido)
+            const terrainGeo = new THREE.PlaneGeometry(600, 600, 40, 40);
             terrainGeo.rotateX(-Math.PI / 2);
 
             const pos = terrainGeo.attributes.position;
             for (let i = 0; i < pos.count; i++) {
                 let x = pos.getX(i);
                 let z = pos.getZ(i);
-                let y1 = Math.sin(x * 0.04) * Math.cos(z * 0.04) * 11;
-                let y2 = Math.sin(x * 0.12) * Math.sin(z * 0.12) * 2.5;
-                pos.setY(i, y1 + y2);
+                // Montañas claras a los lados del camino
+                let distanceFromCenter = Math.abs(x);
+                let height = 0;
+                if(distanceFromCenter > 40) {
+                    height = Math.sin(x * 0.05) * Math.cos(z * 0.05) * 15 + (distanceFromCenter * 0.1);
+                }
+                pos.setY(i, height);
             }
             terrainGeo.computeVertexNormals();
 
-            const terrainMat = new THREE.MeshStandardMaterial({
-                color: 0x090d16,
-                roughness: 0.85,
-                metalness: 0.1,
-                flatShading: true
-            });
+            // Material azul-pizarra con líneas wireframe visibles para dar profundidad
+            const terrainMat = new THREE.MeshStandardMaterial({ color: 0x111827, flatShading: true });
             terrain = new THREE.Mesh(terrainGeo, terrainMat);
             scene.add(terrain);
 
-            // El Jugador: Un Drakker Alado Geométrico Sólido
+            const wireframe = new THREE.Mesh(terrainGeo, new THREE.MeshBasicMaterial({ color: 0x1f2937, wireframe: true }));
+            wireframe.position.y = 0.05; // Un pelín arriba para evitar parpadeo
+            scene.add(wireframe);
+
+            // 3. EL PERSONAJE (Drakker Alado de Oro + Pequeño Jinete)
             player = new THREE.Group();
             
-            // Mascarón de proa/Cuerpo del Dragón
-            const bodyGeo = new THREE.ConeGeometry(1, 4, 5);
+            // Cuerpo del dragón
+            const bodyGeo = new THREE.ConeGeometry(0.8, 4, 8);
             bodyGeo.rotateX(Math.PI / 2);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.2, metalness: 0.8, flatShading: true });
-            const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+            const goldMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.8 });
+            const bodyMesh = new THREE.Mesh(bodyGeo, goldMat);
             player.add(bodyMesh);
 
-            // Alas Móviles
-            const wingGeo = new THREE.BoxGeometry(3.5, 0.08, 1.2);
-            const wingMat = new THREE.MeshStandardMaterial({ color: 0xb5921a, roughness: 0.4, flatShading: true });
-            
-            const leftWing = new THREE.Mesh(wingGeo, wingMat);
-            leftWing.position.set(-2, 0, 0);
+            // Jinete Vikingo (Bloque sobre el lomo)
+            const riderGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+            const riderMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a });
+            const riderMesh = new THREE.Mesh(riderGeo, riderMat);
+            riderMesh.position.set(0, 0.6, 0.2);
+            player.add(riderMesh);
+
+            // Alas
+            const wingGeo = new THREE.BoxGeometry(3, 0.05, 1);
+            const leftWing = new THREE.Mesh(wingGeo, goldMat);
+            leftWing.position.set(-1.8, 0, 0);
             leftWing.name = "leftWing";
             player.add(leftWing);
 
             const rightWing = leftWing.clone();
-            rightWing.position.set(2, 0, 0);
+            rightWing.position.set(1.8, 0, 0);
             rightWing.name = "rightWing";
             player.add(rightWing);
 
-            player.position.set(0, 8, 0);
+            player.position.set(0, 12, 40); // Inicia un poco atrás del faro
             scene.add(player);
 
-            // Tormenta de Nieve Tridimensional
+            // 4. EL FARO RÚNICO (Destino del juego)
+            const beaconGeo = new THREE.CylinderGeometry(2, 2, 40, 16);
+            const beaconMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.4, wireframe: true });
+            beacon = new THREE.Mesh(beaconGeo, beaconMat);
+            beacon.position.copy(targetLocation);
+            scene.add(beacon);
+
+            // Núcleo brillante del faro
+            const coreGeo = new THREE.SphereGeometry(2, 16, 16);
+            const coreMat = new THREE.MeshBasicMaterial({ color: 0xfff5c0 });
+            const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+            coreMesh.position.copy(targetLocation);
+            scene.add(coreMesh);
+
+            // Tormenta de nieve
             const snowGeo = new THREE.BufferGeometry();
-            const snowCount = 500;
+            const snowCount = 400;
             const snowPositions = new Float32Array(snowCount * 3);
-
             for(let i=0; i < snowCount * 3; i+=3) {
-                snowPositions[i] = (Math.random() - 0.5) * 250;
+                snowPositions[i] = (Math.random() - 0.5) * 300;
                 snowPositions[i+1] = Math.random() * 60;
-                snowPositions[i+2] = (Math.random() - 0.5) * 250;
+                snowPositions[i+2] = (Math.random() - 0.5) * 300;
             }
-
             snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
-            const snowMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.25, transparent: true, opacity: 0.8 });
-            snowParticles = new THREE.Points(snowGeo, snowMat);
+            snowParticles = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.3 }));
             scene.add(snowParticles);
 
-            // Control del Mouse 360°
+            // Controles de Cámara 360°
             canvas.addEventListener('mousedown', (e) => { isDragging = true; });
             canvas.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 let deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
-                cameraAngleX -= deltaMove.x * 0.006;
-                cameraAngleY += deltaMove.y * 0.006;
+                cameraAngleX -= deltaMove.x * 0.007;
+                cameraAngleY += deltaMove.y * 0.007;
                 cameraAngleY = Math.max(0.05, Math.min(Math.PI / 2.3, cameraAngleY));
                 previousMousePosition = { x: e.clientX, y: e.clientY };
             });
             window.addEventListener('mouseup', () => { isDragging = false; });
             canvas.addEventListener('mousedown', (e) => { previousMousePosition = { x: e.clientX, y: e.clientY }; });
 
-            // Eventos del Teclado
-            window.addEventListener('keydown', (e) => handleKeys(e, true));
-            window.addEventListener('keyup', (e) => handleKeys(e, false));
+            window.addEventListener('keydown', (e) => { let k = e.key.toLowerCase(); if (k in keys) keys[k] = true; });
+            window.addEventListener('keyup', (e) => { let k = e.key.toLowerCase(); if (k in keys) keys[k] = false; });
             window.addEventListener('resize', onWindowResize);
 
             animate();
-        }
-
-        function handleKeys(e, isPressed) {
-            let key = e.key.toLowerCase();
-            if (key in keys) keys[key] = isPressed;
         }
 
         function onWindowResize() {
@@ -280,26 +269,14 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        function updateNarrative(type) {
-            const data = sagaChronicles[type];
-            document.getElementById('story-title').innerText = data.title;
-            document.getElementById('story-text').innerText = data.text;
-            document.getElementById('story-lore').innerHTML = `<span>${data.source}</span>"${data.quote}"`;
-        }
-
         let clock = new THREE.Clock();
 
         function animate() {
             requestAnimationFrame(animate);
-            let delta = clock.getDelta();
             let time = clock.getElapsedTime();
             let speed = 0.5;
 
-            // Manejo de físicas y actualización de la saga según movimientos
-            if (keys.w || keys.s || keys.a || keys.d) {
-                updateNarrative('flying');
-            }
-
+            // Movimiento fluido con WASD
             if (keys.w) {
                 player.position.x -= Math.sin(cameraAngleX) * speed;
                 player.position.z -= Math.cos(cameraAngleX) * speed;
@@ -310,35 +287,50 @@
                 player.position.z += Math.cos(cameraAngleX) * speed;
                 player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, cameraAngleX + Math.PI, 0.1);
             }
-            if (keys[' ']) {
-                player.position.y += 0.25;
-                updateNarrative('climbing');
+            if (keys.a) {
+                player.position.x -= Math.cos(cameraAngleX) * speed;
+                player.position.z += Math.sin(cameraAngleX) * speed;
+            }
+            if (keys.d) {
+                player.position.x += Math.cos(cameraAngleX) * speed;
+                player.position.z -= Math.sin(cameraAngleX) * speed;
+            }
+            if (keys[' ']) player.position.y += 0.2;
+            if (player.position.y > 6 && !keys[' ']) player.position.y -= 0.05;
+
+            // Aleteo rítmico
+            let lw = player.getObjectByName("leftWing");
+            let rw = player.getObjectByName("rightWing");
+            if (lw && rw) {
+                lw.rotation.z = Math.sin(time * 6) * 0.3;
+                rw.rotation.z = -Math.sin(time * 6) * 0.3;
             }
 
-            // Animación del aleteo del dragón medieval
-            let leftWing = player.getObjectByName("leftWing");
-            let rightWing = player.getObjectByName("rightWing");
-            if (leftWing && rightWing) {
-                leftWing.rotation.z = Math.sin(time * 6) * 0.25;
-                rightWing.rotation.z = -Math.sin(time * 6) * 0.25;
+            // --- LÓGICA DE DETECCIÓN DE DISTANCIA Y COMPROBACIÓN DE CAPÍTULOS ---
+            let distance = player.position.distanceTo(targetLocation);
+            document.getElementById('nav-distance').innerText = Math.round(distance) + "m";
+
+            if (distance < 20 && currentChapter === 1) {
+                currentChapter = 2;
+                // Modificar dinámicamente la UI cuando el jugador llega al Faro
+                document.getElementById('story-title').innerText = "Capítulo II: Las Runas del Faro Escondido";
+                document.getElementById('story-text').innerText = "¡Lo lograste! El Drakker dorado aterriza en el perímetro de energía del Faro Sagrado. Las escrituras grabadas en la piedra comienzan a brillar, revelando las estrofas perdidas del Hávamál. Has superado la tormenta de Midgard.";
+                document.getElementById('story-lore').innerText = "Faro alcanzado con éxito. El viaje concluye bajo la luz protectora.";
+                document.getElementById('nav-objective').innerText = "Faro Alcanzado - Destino Completado";
+                beacon.material.color.setHex(0x10b981); // El faro cambia a verde como recompensa visual
             }
 
-            // Descenso de planeo suave (Gravedad rúnica)
-            if(player.position.y > 5 && !keys[' ']) {
-                player.position.y -= 0.03;
-            }
-
-            // Trigonometría de la órbita de cámara 360
+            // Órbita de cámara 360 fija alrededor del jugador
             camera.position.x = player.position.x + cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
             camera.position.z = player.position.z + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
             camera.position.y = player.position.y + cameraDistance * Math.sin(cameraAngleY);
             camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z);
 
-            // Ciclo infinito de la caída de nieve
+            // Caída de partículas de nieve
             const positions = snowParticles.geometry.attributes.position.array;
             for(let i = 1; i < positions.length; i += 3) {
                 positions[i] -= 0.15;
-                if (positions[i] < 0) positions[i] = 55;
+                if (positions[i] < 0) positions[i] = 60;
             }
             snowParticles.geometry.attributes.position.needsUpdate = true;
 
