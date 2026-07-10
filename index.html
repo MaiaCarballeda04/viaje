@@ -3,22 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saga of the Skogkatt: 360 Open World Prototype</title>
+    <title>Viking & Cats: Peaceful Exploration</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --bg-dark: #050811;
-            --gold: #f59e0b;
-            --font-title: 'Cinzel', serif;
-            --font-medieval: 'Almendra', serif;
-            --font-body: 'Cormorant Garamond', serif;
-        }
-
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body, html { width: 100%; height: 100%; background-color: var(--bg-dark); overflow: hidden; font-family: var(--font-body); color: #e2e8f0; }
+        body, html { width: 100%; height: 100%; background-color: #050811; overflow: hidden; font-family: sans-serif; color: #e2e8f0; }
 
         #canvas-3d {
             position: absolute;
@@ -31,110 +23,86 @@
         }
         #canvas-3d:active { cursor: grabbing; }
 
-        /* HUD Narrativo */
-        .hud-container {
+        /* HUD simple de interacción */
+        .hud-interaction {
             position: absolute;
-            bottom: 30px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90%;
-            max-width: 680px;
-            background: rgba(5, 8, 17, 0.92);
-            backdrop-filter: blur(15px);
-            border: 2px solid var(--gold);
-            border-radius: 8px;
-            padding: 1.5rem;
+            background: rgba(10, 15, 30, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px 40px;
             z-index: 10;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            min-width: 320px;
         }
 
         .hud-title {
-            font-family: var(--font-title);
-            color: var(--gold);
-            font-size: 1.3rem;
-            letter-spacing: 2px;
-            text-align: center;
-            margin-bottom: 0.6rem;
-        }
-
-        .hud-text {
+            font-family: 'Cinzel', serif;
+            color: #f59e0b;
             font-size: 1.2rem;
-            text-align: justify;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .hud-status {
+            font-family: 'Almendra', serif;
+            font-size: 1.25rem;
             color: #cbd5e1;
-            line-height: 1.6;
-            margin-bottom: 0.8rem;
         }
 
-        .hud-lore {
-            font-family: var(--font-medieval);
-            font-style: italic;
-            color: #94a3b8;
-            font-size: 1.05rem;
-            border-top: 1px solid rgba(245, 158, 11, 0.2);
-            padding-top: 0.6rem;
-            text-align: center;
-        }
-
-        /* Panel de Objetivos de Navegación */
-        .objective-panel {
+        .controls-box {
             position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(5, 8, 17, 0.85);
-            border: 1px solid var(--gold);
-            padding: 12px 18px;
+            background: rgba(5, 8, 17, 0.7);
+            padding: 12px;
+            border-radius: 6px;
             font-family: monospace;
             font-size: 0.85rem;
-            color: #e2e8f0;
+            border-left: 3px solid #f59e0b;
             z-index: 10;
-            border-radius: 4px;
+            color: #94a3b8;
         }
-
-        .objective-panel span { color: #10b981; font-weight: bold; }
-        .distance-display { color: #ef4444; font-weight: bold; font-size: 1.1rem; }
+        .controls-box span { color: #f59e0b; font-weight: bold; }
     </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <div class="objective-panel">
-        <strong>MISIÓN ACTIVA:</strong> <span id="nav-objective">Volar hacia el Faro Rúnico</span><br>
-        <strong>DISTANCIA:</strong> <span id="nav-distance" class="distance-display">---</span>
+    <div class="controls-box">
+        <span>[WASD]</span> Caminar por la nieve<br>
+        <span>[MOUSE]</span> Girar cámara 360°<br>
+        <span>[E]</span> Mimar al gatito (cuando estés cerca)
     </div>
 
     <canvas id="canvas-3d"></canvas>
 
-    <div class="hud-container">
-        <h2 class="hud-title" id="story-title">Capítulo I: El Despertar en Midgard</h2>
-        <p class="hud-text" id="story-text">
-            El drakker alado y su tripulante contemplan la inmensidad helada. Al frente, un Faro Sagrado de luz dorada corta la tormenta de nieve. Guía la montura usando las teclas WASD hacia el destello luminoso para avanzar en tu travesía.
-        </p>
-        <div class="hud-lore" id="story-lore">
-            "Para cruzar la bruma, el navegante necesita un punto fijo en el firmamento."
-        </div>
+    <div class="hud-interaction">
+        <h2 class="hud-title" id="action-title">Exploración Libre</h2>
+        <p class="hud-status" id="action-status">Camina por el valle rúnico en busca de amigos peludos...</p>
     </div>
 
     <script>
-        let scene, camera, renderer, terrain, player, snowParticles, moon, beacon;
-        let keys = { w: false, a: false, s: false, d: false, ' ': false };
+        let scene, camera, renderer, player, cat, snowParticles;
+        let keys = { w: false, a: false, s: false, d: false, e: false };
         
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
         let cameraAngleX = 0; 
-        let cameraAngleY = 0.2; 
-        let cameraDistance = 18; 
-
-        // Coordenadas fijas del objetivo (Faro Rúnico)
-        const targetLocation = new THREE.Vector3(0, 12, -120);
-        let currentChapter = 1;
+        let cameraAngleY = 0.3; 
+        let cameraDistance = 10; 
 
         function init() {
             const canvas = document.getElementById('canvas-3d');
 
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x04060f);
-            scene.fog = new THREE.FogExp2(0x04060f, 0.008);
+            scene.background = new THREE.Color(0x060913);
+            scene.fog = new THREE.FogExp2(0x060913, 0.02);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -142,125 +110,159 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
 
-            // Iluminación Clara
-            const ambientLight = new THREE.AmbientLight(0x1e293b, 2.0);
+            // Luces para que la armadura y todo se vea nítido
+            const ambientLight = new THREE.AmbientLight(0x2e3b4e, 2.5);
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
-            directionalLight.position.set(0, 50, 50);
-            scene.add(directionalLight);
+            const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            sunLight.position.set(10, 30, 20);
+            scene.add(sunLight);
 
-            // 1. LA LUNA GIGANTE
-            const moonGeo = new THREE.SphereGeometry(12, 32, 32);
-            const moonMat = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
-            moon = new THREE.Mesh(moonGeo, moonMat);
-            moon.position.set(0, 45, -200); // Al fondo del escenario
+            // Una hermosa e inmensa Luna de fondo
+            const moonGeo = new THREE.SphereGeometry(8, 32, 32);
+            const moonMat = new THREE.MeshBasicMaterial({ color: 0xfffae6 });
+            const moon = new THREE.Mesh(moonGeo, moonMat);
+            moon.position.set(0, 25, -80);
             scene.add(moon);
 
-            // 2. TERRENO VISIBLE (Montañas con relieve nítido)
-            const terrainGeo = new THREE.PlaneGeometry(600, 600, 40, 40);
-            terrainGeo.rotateX(-Math.PI / 2);
+            // Suelo plano cubierto de nieve con una sutil cuadrícula nórdica
+            const floorGeo = new THREE.PlaneGeometry(200, 200);
+            floorGeo.rotateX(-Math.PI / 2);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            scene.add(floor);
 
-            const pos = terrainGeo.attributes.position;
-            for (let i = 0; i < pos.count; i++) {
-                let x = pos.getX(i);
-                let z = pos.getZ(i);
-                // Montañas claras a los lados del camino
-                let distanceFromCenter = Math.abs(x);
-                let height = 0;
-                if(distanceFromCenter > 40) {
-                    height = Math.sin(x * 0.05) * Math.cos(z * 0.05) * 15 + (distanceFromCenter * 0.1);
-                }
-                pos.setY(i, height);
-            }
-            terrainGeo.computeVertexNormals();
+            const grid = new THREE.GridHelper(200, 50, 0x1f2937, 0x1f2937);
+            grid.position.y = 0.01;
+            scene.add(grid);
 
-            // Material azul-pizarra con líneas wireframe visibles para dar profundidad
-            const terrainMat = new THREE.MeshStandardMaterial({ color: 0x111827, flatShading: true });
-            terrain = new THREE.Mesh(terrainGeo, terrainMat);
-            scene.add(terrain);
-
-            const wireframe = new THREE.Mesh(terrainGeo, new THREE.MeshBasicMaterial({ color: 0x1f2937, wireframe: true }));
-            wireframe.position.y = 0.05; // Un pelín arriba para evitar parpadeo
-            scene.add(wireframe);
-
-            // 3. EL PERSONAJE (Drakker Alado de Oro + Pequeño Jinete)
+            // --- DISEÑO DEL VIKINGO (Low-poly con armadura y casco) ---
             player = new THREE.Group();
-            
-            // Cuerpo del dragón
-            const bodyGeo = new THREE.ConeGeometry(0.8, 4, 8);
-            bodyGeo.rotateX(Math.PI / 2);
-            const goldMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.8 });
-            const bodyMesh = new THREE.Mesh(bodyGeo, goldMat);
-            player.add(bodyMesh);
 
-            // Jinete Vikingo (Bloque sobre el lomo)
-            const riderGeo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-            const riderMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a });
-            const riderMesh = new THREE.Mesh(riderGeo, riderMat);
-            riderMesh.position.set(0, 0.6, 0.2);
-            player.add(riderMesh);
+            // Cuerpo / Armadura Gris de Placas
+            const armorMesh = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.5, 0.6, 1.4, 8),
+                new THREE.MeshStandardMaterial({ color: 0x4b5563, roughness: 0.4, metalness: 0.6 })
+            );
+            armorMesh.position.y = 0.7;
+            player.add(armorMesh);
 
-            // Alas
-            const wingGeo = new THREE.BoxGeometry(3, 0.05, 1);
-            const leftWing = new THREE.Mesh(wingGeo, goldMat);
-            leftWing.position.set(-1.8, 0, 0);
-            leftWing.name = "leftWing";
-            player.add(leftWing);
+            // Cabeza (Piel)
+            const headMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(0.3, 8, 8),
+                new THREE.MeshStandardMaterial({ color: 0xffdbac })
+            );
+            headMesh.position.y = 1.6;
+            player.add(headMesh);
 
-            const rightWing = leftWing.clone();
-            rightWing.position.set(1.8, 0, 0);
-            rightWing.name = "rightWing";
-            player.add(rightWing);
+            // Capa / Barba pelirroja
+            const beardMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(0.35, 0.4, 0.2),
+                new THREE.MeshStandardMaterial({ color: 0xd97706 }) // Naranja/Marrón vikingo
+            );
+            beardMesh.position.set(0, 1.4, -0.2); // Al frente de la cara
+            player.add(beardMesh);
 
-            player.position.set(0, 12, 40); // Inicia un poco atrás del faro
+            // Casco de Hierro (Hemisferio)
+            const helmetMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(0.33, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+                new THREE.MeshStandardMaterial({ color: 0x1f2937, metalness: 0.8 })
+            );
+            helmetMesh.position.y = 1.75;
+            player.add(helmetMesh);
+
+            // Cuerno Izquierdo del Casco
+            const hornL = new THREE.Mesh(
+                new THREE.ConeGeometry(0.08, 0.3, 5),
+                new THREE.MeshStandardMaterial({ color: 0xf8fafc })
+            );
+            hornL.position.set(-0.3, 1.9, 0);
+            hornL.rotation.z = 0.6;
+            player.add(hornL);
+
+            // Cuerno Derecho del Casco
+            const hornR = hornL.clone();
+            hornR.position.x = 0.3;
+            hornR.rotation.z = -0.6;
+            player.add(hornR);
+
+            player.position.set(0, 0, 0);
             scene.add(player);
 
-            // 4. EL FARO RÚNICO (Destino del juego)
-            const beaconGeo = new THREE.CylinderGeometry(2, 2, 40, 16);
-            const beaconMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.4, wireframe: true });
-            beacon = new THREE.Mesh(beaconGeo, beaconMat);
-            beacon.position.copy(targetLocation);
-            scene.add(beacon);
+            // --- DISEÑO DEL GATITO (Michi Naranja) ---
+            cat = new THREE.Group();
 
-            // Núcleo brillante del faro
-            const coreGeo = new THREE.SphereGeometry(2, 16, 16);
-            const coreMat = new THREE.MeshBasicMaterial({ color: 0xfff5c0 });
-            const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-            coreMesh.position.copy(targetLocation);
-            scene.add(coreMesh);
+            // Cuerpo del michi
+            const catBody = new THREE.Mesh(
+                new THREE.BoxGeometry(0.3, 0.25, 0.5),
+                new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.8 }) // Naranja brillante
+            );
+            catBody.position.y = 0.125;
+            cat.add(catBody);
 
-            // Tormenta de nieve
+            // Cabeza del michi
+            const catHead = new THREE.Mesh(
+                new THREE.BoxGeometry(0.2, 0.2, 0.2),
+                new THREE.MeshStandardMaterial({ color: 0xf97316 })
+            );
+            catHead.position.set(0, 0.3, -0.22);
+            cat.add(catHead);
+
+            // Orejitas
+            const earL = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.08, 4), new THREE.MeshStandardMaterial({ color: 0xf97316 }));
+            earL.position.set(-0.06, 0.42, -0.22);
+            cat.add(earL);
+            const earR = earL.clone();
+            earR.position.x = 0.06;
+            cat.add(earR);
+
+            // Colita feliz
+            const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3), new THREE.MeshStandardMaterial({ color: 0xf97316 }));
+            tail.position.set(0, 0.3, 0.25);
+            tail.rotation.x = 0.5;
+            cat.add(tail);
+
+            // Ubicar al gato un poco adelante del spawn del jugador
+            cat.position.set(0, 0, -6);
+            scene.add(cat);
+
+            // Nieve ambiental cayendo
             const snowGeo = new THREE.BufferGeometry();
-            const snowCount = 400;
+            const snowCount = 300;
             const snowPositions = new Float32Array(snowCount * 3);
             for(let i=0; i < snowCount * 3; i+=3) {
-                snowPositions[i] = (Math.random() - 0.5) * 300;
-                snowPositions[i+1] = Math.random() * 60;
-                snowPositions[i+2] = (Math.random() - 0.5) * 300;
+                snowPositions[i] = (Math.random() - 0.5) * 100;
+                snowPositions[i+1] = Math.random() * 30;
+                snowPositions[i+2] = (Math.random() - 0.5) * 100;
             }
             snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
-            snowParticles = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.3 }));
+            snowParticles = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15 }));
             scene.add(snowParticles);
 
-            // Controles de Cámara 360°
+            // Eventos de Mouse (Órbita 360°)
             canvas.addEventListener('mousedown', (e) => { isDragging = true; });
             canvas.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 let deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
                 cameraAngleX -= deltaMove.x * 0.007;
                 cameraAngleY += deltaMove.y * 0.007;
-                cameraAngleY = Math.max(0.05, Math.min(Math.PI / 2.3, cameraAngleY));
+                cameraAngleY = Math.max(0.1, Math.min(Math.PI / 2.5, cameraAngleY));
                 previousMousePosition = { x: e.clientX, y: e.clientY };
             });
             window.addEventListener('mouseup', () => { isDragging = false; });
             canvas.addEventListener('mousedown', (e) => { previousMousePosition = { x: e.clientX, y: e.clientY }; });
 
-            window.addEventListener('keydown', (e) => { let k = e.key.toLowerCase(); if (k in keys) keys[k] = true; });
-            window.addEventListener('keyup', (e) => { let k = e.key.toLowerCase(); if (k in keys) keys[k] = false; });
+            // Teclado
+            window.addEventListener('keydown', (e) => { handleKey(e.key, true); });
+            window.addEventListener('keyup', (e) => { handleKey(e.key, false); });
             window.addEventListener('resize', onWindowResize);
 
             animate();
+        }
+
+        function handleKey(key, isPressed) {
+            let k = key.toLowerCase();
+            if (k in keys) keys[k] = isPressed;
         }
 
         function onWindowResize() {
@@ -269,68 +271,69 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        let clock = new THREE.Clock();
-
         function animate() {
             requestAnimationFrame(animate);
-            let time = clock.getElapsedTime();
-            let speed = 0.5;
+            let speed = 0.12;
 
-            // Movimiento fluido con WASD
+            // Movimiento relativo a la orientación de la cámara
             if (keys.w) {
                 player.position.x -= Math.sin(cameraAngleX) * speed;
                 player.position.z -= Math.cos(cameraAngleX) * speed;
-                player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, cameraAngleX, 0.1);
+                player.rotation.y = cameraAngleX; // El vikingo mira hacia donde camina
             }
             if (keys.s) {
                 player.position.x += Math.sin(cameraAngleX) * speed;
                 player.position.z += Math.cos(cameraAngleX) * speed;
-                player.rotation.y = THREE.MathUtils.lerp(player.rotation.y, cameraAngleX + Math.PI, 0.1);
+                player.rotation.y = cameraAngleX + Math.PI;
             }
             if (keys.a) {
                 player.position.x -= Math.cos(cameraAngleX) * speed;
                 player.position.z += Math.sin(cameraAngleX) * speed;
+                player.rotation.y = cameraAngleX + Math.PI/2;
             }
             if (keys.d) {
                 player.position.x += Math.cos(cameraAngleX) * speed;
                 player.position.z -= Math.sin(cameraAngleX) * speed;
-            }
-            if (keys[' ']) player.position.y += 0.2;
-            if (player.position.y > 6 && !keys[' ']) player.position.y -= 0.05;
-
-            // Aleteo rítmico
-            let lw = player.getObjectByName("leftWing");
-            let rw = player.getObjectByName("rightWing");
-            if (lw && rw) {
-                lw.rotation.z = Math.sin(time * 6) * 0.3;
-                rw.rotation.z = -Math.sin(time * 6) * 0.3;
+                player.rotation.y = cameraAngleX - Math.PI/2;
             }
 
-            // --- LÓGICA DE DETECCIÓN DE DISTANCIA Y COMPROBACIÓN DE CAPÍTULOS ---
-            let distance = player.position.distanceTo(targetLocation);
-            document.getElementById('nav-distance').innerText = Math.round(distance) + "m";
+            // --- LÓGICA DE PROXIMIDAD Y MIMOS ---
+            let distance = player.position.distanceTo(cat.position);
+            const titleElement = document.getElementById('action-title');
+            const statusElement = document.getElementById('action-status');
 
-            if (distance < 20 && currentChapter === 1) {
-                currentChapter = 2;
-                // Modificar dinámicamente la UI cuando el jugador llega al Faro
-                document.getElementById('story-title').innerText = "Capítulo II: Las Runas del Faro Escondido";
-                document.getElementById('story-text').innerText = "¡Lo lograste! El Drakker dorado aterriza en el perímetro de energía del Faro Sagrado. Las escrituras grabadas en la piedra comienzan a brillar, revelando las estrofas perdidas del Hávamál. Has superado la tormenta de Midgard.";
-                document.getElementById('story-lore').innerText = "Faro alcanzado con éxito. El viaje concluye bajo la luz protectora.";
-                document.getElementById('nav-objective').innerText = "Faro Alcanzado - Destino Completado";
-                beacon.material.color.setHex(0x10b981); // El faro cambia a verde como recompensa visual
+            if (distance < 1.8) {
+                // El jugador está lo suficientemente cerca del michi
+                if (keys.e) {
+                    titleElement.innerText = "❤️ ¡MIMANDO AL GATITO! ❤️";
+                    statusElement.innerText = "El temible guerrero norteño baja la guardia. El michi ronronea feliz: *Prrr... Miau*";
+                    
+                    // Animación simple: el vikingo se inclina un poquito hacia adelante para acariciar
+                    player.rotation.x = 0.2;
+                    cat.rotation.y += 0.05; // El gatito da vueltas de alegría
+                } else {
+                    titleElement.innerText = "¡Encontraste un Michi Naranja!";
+                    statusElement.innerText = "Mantén presionada la tecla [E] para llenarlo de mimos.";
+                    player.rotation.x = 0;
+                }
+            } else {
+                // Lejos del gato, todo normal
+                titleElement.innerText = "Exploración Libre";
+                statusElement.innerText = "Camina por el valle rúnico en busca de amigos peludos...";
+                player.rotation.x = 0;
             }
 
-            // Órbita de cámara 360 fija alrededor del jugador
+            // Cámara en tercera persona siguiendo al Vikingo
             camera.position.x = player.position.x + cameraDistance * Math.sin(cameraAngleX) * Math.cos(cameraAngleY);
             camera.position.z = player.position.z + cameraDistance * Math.cos(cameraAngleX) * Math.cos(cameraAngleY);
             camera.position.y = player.position.y + cameraDistance * Math.sin(cameraAngleY);
-            camera.lookAt(player.position.x, player.position.y + 0.5, player.position.z);
+            camera.lookAt(player.position.x, player.position.y + 1.0, player.position.z);
 
-            // Caída de partículas de nieve
+            // Movimiento infinito de la nieve
             const positions = snowParticles.geometry.attributes.position.array;
             for(let i = 1; i < positions.length; i += 3) {
-                positions[i] -= 0.15;
-                if (positions[i] < 0) positions[i] = 60;
+                positions[i] -= 0.05;
+                if (positions[i] < 0) positions[i] = 30;
             }
             snowParticles.geometry.attributes.position.needsUpdate = true;
 
